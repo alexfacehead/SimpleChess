@@ -1,3 +1,14 @@
+This project was made by alexfacehead in Python. It does not implement castling,
+en passant, or pawn promotion. These are to-be-implemented, and I welcome any
+advice on simplifying modularization. Enjoy the simple crappy chess game.
+
+**Features**:
+- 
+
+
+
+* Install Instructions *
+
 **For Windows**:
 1. Have a working Python install.
 2. Have a working `pip` install for Windows (skip to step 3 if you already have one)
