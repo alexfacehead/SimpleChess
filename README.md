@@ -2,13 +2,13 @@ This project was made by alexfacehead in Python. It does not implement castling,
 en passant, or pawn promotion. These are to-be-implemented, and I welcome any
 advice on simplifying modularization. Enjoy the simple crappy chess game.
 
-* Features:
+Features:
 - Scoreboard (in red, both sides)
 - Undo move button by pressing `u`
 - Piece logic for everything but castling and en passant
 - Turn-based, can't cheat!
 
-**Install Instructions**:
+**Install Instructions**
 
 **For Windows**:
 1. Have a working Python install.
