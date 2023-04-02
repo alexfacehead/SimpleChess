@@ -8,6 +8,25 @@ class ChessBoard:
         self.board = [[' ' for _ in range(8)] for _ in range(8)]
         self.initialize_board()
 
+        # Castling constituents' has_moved status tracking
+        self.king_rook_moved = {'white': False, 'black': False}
+        self.queen_rook_moved = {'white': False, 'black': False}
+        self.king_moved = {'white': False, 'black': False}
+
+    # For formatting
+    def get_pos(x, y):
+        pos_map = {
+            0: 'a',
+            1: 'b',
+            2: 'c',
+            3: 'd',
+            4: 'e',
+            5: 'f',
+            6: 'g',
+            7: 'h'
+        }
+        return pos_map[y] + str(8 - x)  # Swap x and y, and subtract x from 8
+
     def initialize_board(self):
         pieces = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 
@@ -31,7 +50,10 @@ class ChessBoard:
         if (piece.isupper() and self.turn == 'black') or (piece.islower() and self.turn == 'white'):
             return False
 
-        if destination_piece != ' ' and piece.islower() == destination_piece.islower():
+        is_castle_move = piece.lower() == "k" and abs(dest_y - start_y) > 1
+        print("DEBUG: Is castle move? " + str(is_castle_move))
+        if not is_castle_move and destination_piece != ' ' and piece.islower() == destination_piece.islower():
+            print("DEBUG: Castling not working")
             return False
 
         is_valid_move = False
@@ -48,32 +70,130 @@ class ChessBoard:
 
         if piece_type in valid_move_methods:
             is_valid_move = valid_move_methods[piece_type](start_x, start_y, dest_x, dest_y)
+            if (is_castle_move):
+                is_valid_move = True
+            print("DEBUG: Is valid move after checking valid_move_methods? " + str(is_valid_move))
 
         if is_valid_move:
-            prev_piece = self.get_piece(dest_x, dest_y)
-            score_change = 0
-            prev_piece_value = 0
-            if prev_piece != ' ':
-                prev_piece_value = self.piece_values[prev_piece.lower()]
-                if prev_piece.isupper():
-                    self.score['black'] += prev_piece_value
-                else:
-                    self.score['white'] += prev_piece_value
+            if is_castle_move:
+                if not self.handle_castling_conditions(start_x, start_y, dest_x, dest_y):
+                    return False
+                # Update king_moved
+                self.king_moved[self.turn] = True
+            else:
+                self.set_piece(dest_x, dest_y, piece)
+                self.set_piece(start_x, start_y, ' ')
+                if piece_type == "r" and start_x == 0:
+                    if start_y == 0:
+                        self.queen_rook_moved[self.turn] = True
+                    elif start_y == 7:
+                        self.king_rook_moved[self.turn] = True
+                elif piece_type == "r" and start_x == 7:
+                    if start_y == 0:
+                        self.queen_rook_moved[self.turn] = True
+                    elif start_y == 7:
+                        self.king_rook_moved[self.turn] = True
+                self.turn = 'black' if self.turn == 'white' else 'white'
+                return True
+        return False
 
-            self.set_piece(dest_x, dest_y, piece)
-            self.set_piece(start_x, start_y, ' ')
+    def handle_castling_conditions(self, start_x, start_y, dest_x, dest_y):
+        print("DEBUG: Handling castling block entered")
+        piece = self.get_piece(start_x, start_y)
+        color = 'white' if piece.isupper() else 'black'
 
-            self.move_history.append(((start_x, start_y), (dest_x, dest_y), prev_piece, score_change))
+        if self.king_moved[color] or ((dest_y == 0 and self.queen_rook_moved[color]) or (dest_y == 7 and self.king_rook_moved[color])):
+            print("DEBUG: Returning false from handling castling. self.king_moved[" + str(color) + "]" + "=" + str(self.king_moved[color]))
+            print("DEBUG: self.king_moved[" + str(color) + "]" + "=" + str(self.queen_rook_moved[color]))
+            print("DEBUG: dest_y == 7 = " + str(dest_y == 7) + " and self.king_rook_moved[" + str(color) + "]" + "=" + str(self.king_rook_moved[color]))
+            return False
+
+        is_short_castling = dest_y == start_y + 3
+        is_long_castling = dest_y == start_y - 4
+
+        if not (is_short_castling or is_long_castling):
+            print("DEBUG: Returning false from handling castling because not is_short_castling and not is_long_castling")
+            return False
+
+        if is_short_castling:
+            if not self.is_clear_for_castle(start_y, start_y + 1, dest_y):
+                print("DEBUG: Returning false from handling castling because path is not clear #1")
+                return False
+        else:
+            if not self.is_clear_for_castle(start_y, start_y - 1, dest_y - 1):
+                print("DEBUG: Returning false from handling castling because path is not clear #2")
+                return False
+
+        if not self.check_if_in_check(start_x, start_y, self.turn):
+            print("DEBUG: Entering final handle_castling block, not in check")
+            self.perform_castle(start_x, start_y, dest_x, dest_y, is_short_castling)
+            self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
+            print("DEBUG: Castling performed: {} to {}".format(ChessBoard.get_pos(start_x, start_y), ChessBoard.get_pos(dest_x, dest_y)))
             print("Current list of move history: " + str(self.move_history))
             print("Current score: " + str(self.get_score()))
             self.turn = 'black' if self.turn == 'white' else 'white'
             return True
         return False
+    
+    def is_clear_for_castle(self, start_x, start_y, end_y):
+        step = 1 if start_y < end_y else -1
+        for y in range(start_y + step, end_y, step):
+            if self.get_piece(start_x, y) != ' ':
+                return False
+
+        return True
+
+    def check_if_in_check(self, king_x, king_y, turn):
+        for x in range(8):
+            for y in range(8):
+                piece = self.get_piece(x, y)
+                if piece != ' ' and (piece.isupper() != (turn == 'white')):
+                    piece_type = piece.lower()
+                    valid_move_methods = {
+                        'r': self.valid_rook_move,
+                        'n': self.valid_knight_move,
+                        'b': self.valid_bishop_move,
+                        'q': self.valid_queen_move,
+                        'k': self.valid_king_move,
+                        'p': self.valid_pawn_move
+                    }
+
+                    if piece_type in valid_move_methods:
+                        is_valid_move = valid_move_methods[piece_type](x, y, king_x, king_y)
+                        if is_valid_move:
+                            return True
+        return False
+
+    def perform_castle(self, king_x, king_y, rook_x, rook_y, is_short_castling):
+        print("Performing the castling (set_piece attempt is to follow)")
+        king_destination_y = king_y + 2 if is_short_castling else king_y - 2
+        self.set_piece(king_x, king_destination_y, self.get_piece(king_x, king_y))
+        self.set_piece(king_x, king_y, ' ')
+
+        rook_destination_y = king_destination_y - 1 if is_short_castling else king_destination_y + 1
+        self.set_piece(king_x, rook_destination_y, self.get_piece(rook_x, rook_y))
+        self.set_piece(rook_x, rook_y, ' ')
+
+        if self.get_piece(king_x, king_destination_y).isupper():
+            self.king_moved['white'] = True
+            if rook_y < king_y:
+                self.queen_rook_moved['white'] = True
+            else:
+                self.king_rook_moved['white'] = True
+        elif self.get_piece(king_x, king_destination_y).islower():
+            print("Setting king_moved['black'] to True")
+            self.king_moved['black'] = True
+            if rook_y < king_y:
+                self.queen_rook_moved['black'] = True
+            else:
+                self.king_rook_moved['black'] = True
+        print("End of perform castle")
 
     def get_score(self):
         return self.score
 
     def undo_move(self):
+        print("attempted undo")
         if not self.move_history:
             return False
 
@@ -173,9 +293,39 @@ class ChessBoard:
 def main():
     chess_board = ChessBoard()
 
+    print("Initial board:")
+    chess_board.print_board()
+
+    # White side castling (E1 to H1)
+    print("\nWhite side castling (E1 to H1):")
     chess_board.move_piece(1, 4, 3, 4)
     chess_board.move_piece(6, 3, 4, 3)
+    chess_board.move_piece(0, 4, 0, 6)
+    chess_board.move_piece(0, 7, 0, 5)
+    chess_board.print_board()
 
+    # White side castling (E1 to A1)
+    print("\nWhite side castling (E1 to A1):")
+    chess_board.undo_move()
+    chess_board.undo_move()
+    chess_board.move_piece(0, 4, 0, 2)
+    chess_board.move_piece(0, 0, 0, 3)
+    chess_board.print_board()
+
+    # Black side castling (E8 to H8)
+    print("\nBlack side castling (E8 to H8):")
+    chess_board.move_piece(1, 3, 3, 3)
+    chess_board.move_piece(6, 4, 4, 4)
+    chess_board.move_piece(7, 4, 7, 6)
+    chess_board.move_piece(7, 7, 7, 5)
+    chess_board.print_board()
+
+    # Black side castling (E8 to A8)
+    print("\nBlack side castling (E8 to A8):")
+    chess_board.undo_move()
+    chess_board.undo_move()
+    chess_board.move_piece(7, 4, 7, 2)
+    chess_board.move_piece(7, 0, 7, 3)
     chess_board.print_board()
 
 if __name__ == "__main__":

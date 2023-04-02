@@ -1,6 +1,9 @@
 import pygame
 from ChessBoard import ChessBoard
 
+# Define SELECTED_COLOR as a constant, e.g., (255, 255, 0) for yellow
+SELECTED_COLOR = (255, 255, 0)
+
 # Constants
 WIDTH, HEIGHT = 800, 800
 ROWS, COLS = 8, 8
@@ -34,7 +37,10 @@ pieces = {
 }
 
 # Function to handle graphical board display
-def draw_board(screen, chess_board):
+def draw_board(screen, chess_board, selected_piece=None):
+    BORDER_WIDTH = 4  # Width of the border around the selected square
+    BORDER_COLOR = (255, 255, 0)  # Yellow color for the border
+
     for row in range(ROWS):
         for col in range(COLS):
             color = WHITE if (row + col) % 2 == 0 else BLACK
@@ -43,3 +49,6 @@ def draw_board(screen, chess_board):
             piece = chess_board.get_piece(row, col)
             if piece != ' ':
                 screen.blit(pieces[piece], (col * SQUARE_SIZE, row * SQUARE_SIZE))
+
+            if selected_piece and (row, col) == selected_piece:
+                pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), BORDER_WIDTH)

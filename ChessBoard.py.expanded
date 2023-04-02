@@ -1,0 +1,334 @@
+class ChessBoard:
+    def __init__(self):
+        self.piece_values = {'p': 1, 'r': 5, 'n': 3, 'b': 3, 'q': 9, 'k': 0}
+        self.score = {'white': 0, 'black': 0}
+        self.turn = 'white'
+        self.king_rook_moved = {'white': False, 'black': False}
+        self.queen_rook_moved = {'white': False, 'black': False}
+        self.king_moved = {'white': False, 'black': False}
+        self.move_history = []
+        self.board = [[' ' for _ in range(8)] for _ in range(8)]
+        self.initialize_board()
+
+    def initialize_board(self):
+        pieces = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+
+        for i, piece in enumerate(pieces):
+            self.board[0][i] = piece
+            self.board[7][i] = piece.lower()
+
+        for i in range(8):
+            self.board[1][i] = 'P'
+            self.board[6][i] = 'p'
+
+    def is_in_check(self, color, king_position=None):
+        if king_position is None:
+            for i in range(8):
+                for j in range(8):
+                    piece = self.get_piece(i, j)
+                    if piece.lower() == 'k' and (piece.islower() == (color == 'black')):
+                        king_position = (i, j)
+                        break
+                if king_position:
+                    break
+
+        if not king_position:
+            return False
+
+        for i in range(8):
+            for j in range(8):
+                piece = self.get_piece(i, j)
+                if piece.islower() == (color == 'black'):
+                    valid_move_methods = {
+                        'r': self.valid_rook_move,
+                        'n': self.valid_knight_move,
+                        'b': self.valid_bishop_move,
+                        'q': self.valid_queen_move,
+                        'p': self.valid_pawn_move
+                    }
+
+                    piece_type = piece.lower()
+                    if piece_type in valid_move_methods and valid_move_methods[piece_type](i, j, king_position[0], king_position[1]):
+                        return True
+        return False
+
+    def get_piece(self, x, y):
+        return self.board[x][y]
+
+    def set_piece(self, x, y, piece):
+        self.board[x][y] = piece
+
+    # move_piece helper method checks if the piece being moved is a King for castling
+    def update_rook_king_flags(self, piece_type, start_y):
+        if piece_type == 'k':
+            self.king_moved[self.turn] = True
+        elif piece_type == 'r':
+            if start_y == 0:
+                self.queen_rook_moved[self.turn] = True
+            elif start_y == 7:
+                self.king_rook_moved[self.turn] = True
+
+    def _move_without_turn_update(self, start_x, start_y, dest_x, dest_y):
+        piece = self.get_piece(start_x, start_y)
+        destination_piece = self.get_piece(dest_x, dest_y)
+        if destination_piece != ' ' and piece.islower() == destination_piece.islower():
+            return piece, False
+
+        self.set_piece(dest_x, dest_y, piece)
+        self.set_piece(start_x, start_y, ' ')
+        return piece, True
+
+    # Helper function actually sets the pieces for castling
+    def perform_castling_move(self, start_x, start_y, dest_x, dest_y):
+        king_start_pos = (start_x, start_y)
+        rook_start_pos = (dest_x, dest_y)
+        king_end_pos, rook_end_pos = None, None
+
+        if start_y < dest_y:  # King-side castling
+            king_end_pos = (start_x, start_y + 2)
+            rook_end_pos = (dest_x, dest_y - 2)
+        else:  # Queen-side castling
+            king_end_pos = (start_x, start_y - 2)
+            rook_end_pos = (dest_x, dest_y + 3)
+
+        # Move the king
+        self._move_without_turn_update(king_start_pos[0], king_start_pos[1], king_end_pos[0], king_end_pos[1])
+
+        # Move the rook
+        self._move_without_turn_update(rook_start_pos[0], rook_start_pos[1], rook_end_pos[0], rook_end_pos[1])
+
+        return True
+
+    def check_valid_move_helper(self, start_x, start_y, dest_x, dest_y, is_castling_move, piece_type, destination_piece):
+        if is_castling_move:
+            move_result = self.perform_castling_move(start_x, start_y, dest_x, dest_y)
+            if not move_result:
+                return False
+            piece = self.get_piece(dest_x, dest_y)
+        else:
+            piece, move_result = self._move_without_turn_update(start_x, start_y, dest_x, dest_y)
+            if not move_result:
+                return False
+
+        prev_piece_value = 0
+        if destination_piece != ' ':
+            prev_piece_value = self.piece_values[destination_piece.lower()]
+            if destination_piece.isupper():
+                self.score['black'] += prev_piece_value
+            else:
+                self.score['white'] += prev_piece_value
+
+        king_position = None
+        for i in range(8):
+            for j in range(8):
+                piece_on_board = self.get_piece(i, j)
+                if piece_on_board.lower() == 'k' and (piece_on_board.islower() == (self.turn == 'black')):
+                    king_position = (i, j)
+                    break
+            if king_position:
+                break
+
+        if king_position and self.is_in_check(self.turn, king_position):
+            # Undo the move directly here instead of calling undo_move
+            self.set_piece(dest_x, dest_y, destination_piece)
+            self.set_piece(start_x, start_y, piece)
+            if destination_piece != ' ':
+                if destination_piece.isupper():
+                    self.score['black'] -= prev_piece_value
+                else:
+                    self.score['white'] -= prev_piece_value
+            return False
+
+        self.update_rook_king_flags(piece_type, start_y)
+
+        self.move_history.append(((start_x, start_y), (dest_x, dest_y), prev_piece, prev_piece_value))
+        print("Current list of move history: " + str(self.move_history))
+        print("Current score: " + str(self.get_score()))
+        self.turn = 'black' if self.turn == 'white' else 'white'  # Update the turn
+        return True
+
+
+    def move_piece(self, start_x, start_y, dest_x, dest_y):
+        piece = self.get_piece(start_x, start_y)
+        print("Current board")
+        self.print_board()
+        print(f"Moving piece {piece} at ({start_x}, {start_y}) to ({dest_x}, {dest_y})")
+
+        destination_piece = self.get_piece(dest_x, dest_y)
+        if (piece.isupper() and self.turn == 'black') or (piece.islower() and self.turn == 'white'):
+            return False
+
+        if destination_piece != ' ' and piece.islower() == destination_piece.islower():
+            return False
+
+        is_valid_move = False
+        is_castling_move = False
+
+        piece_type = piece.lower()
+        valid_move_methods = {
+            'r': self.valid_rook_move,
+            'n': self.valid_knight_move,
+            'b': self.valid_bishop_move,
+            'q': self.valid_queen_move,
+            'k': self.valid_king_move,
+            'p': self.valid_pawn_move
+        }
+
+        if piece_type in valid_move_methods:
+            is_valid_move = valid_move_methods[piece_type](start_x, start_y, dest_x, dest_y)
+            if not is_valid_move and (piece_type == 'k' or piece_type == 'r'):
+                is_valid_move = self.valid_castling_move(start_x, start_y, dest_x, dest_y)
+                if is_valid_move:
+                    is_castling_move = True
+
+        if is_valid_move:
+            print(f"Is valid move: {is_valid_move}")            
+            result = self.check_valid_move_helper(start_x, start_y, dest_x, dest_y, is_castling_move, piece_type, destination_piece)
+            print(f"Check valid move helper result: {result}")
+            return result
+        return False
+    
+    def get_score(self):
+        return self.score
+
+    def undo_move(self):
+        if not self.move_history:
+            return False
+
+        last_move = self.move_history.pop()
+        (start_x, start_y), (dest_x, dest_y), prev_piece, score_change = last_move
+
+        moved_piece = self.get_piece(dest_x, dest_y)
+        self.board[start_x][start_y] = moved_piece
+
+        self.board[dest_x][dest_y] = prev_piece
+
+        if prev_piece != ' ':
+            if prev_piece.isupper():
+                self.score['white'] -= score_change
+            else:
+                self.score['black'] -= score_change
+
+        self.turn = 'black' if self.turn == 'white' else 'white'
+
+        return True
+
+    def print_board(self):
+        for row in self.board:
+            print(' '.join(row))
+
+    def valid_bishop_move(self, start_x, start_y, dest_x, dest_y):
+        if abs(dest_x - start_x) != abs(dest_y - start_y):
+            return False
+
+        x_step = 1 if dest_x > start_x else -1
+        y_step = 1 if dest_y > start_y else -1
+
+        x, y = start_x + x_step, start_y + y_step
+
+        while x != dest_x and y != dest_y:
+            if self.get_piece(x, y) != ' ':
+                return False
+            x += x_step
+            y += y_step
+
+        return True
+
+    def valid_pawn_move(self, start_x, start_y, dest_x, dest_y):
+        piece = self.get_piece(start_x, start_y)
+        is_white = piece.isupper()
+        direction = 1 if is_white else -1
+        dest_piece = self.get_piece(dest_x, dest_y)
+
+        if dest_y == start_y and dest_x == start_x + direction and dest_piece == ' ':
+            return True
+
+        if abs(dest_y - start_y) == 1 and dest_x == start_x + direction and dest_piece != ' ' and dest_piece.isupper() != is_white:
+            destination_piece_present = self.get_piece(dest_x, dest_y) != ' '
+            if destination_piece_present:
+                return True
+
+        if (start_x == 1 and is_white) or (start_x == 6 and not is_white):
+            if dest_y == start_y and dest_x == start_x + 2 * direction and dest_piece == ' ' and self.get_piece(start_x + direction, start_y) == ' ':
+                return True
+
+        return False
+
+    def valid_king_move(self, start_x, start_y, dest_x, dest_y):
+        x_diff = abs(start_x - dest_x)
+        y_diff = abs(start_y - dest_y)
+
+        if x_diff <= 1 and y_diff <= 1:
+            return True
+        else:
+            return False
+
+    def valid_queen_move(self, start_x, start_y, dest_x, dest_y):
+        return self.valid_rook_move(start_x, start_y, dest_x, dest_y) or self.valid_bishop_move(start_x, start_y, dest_x, dest_y)
+
+    def valid_rook_move(self, start_x, start_y, dest_x, dest_y):
+        if start_x != dest_x and start_y != dest_y:
+            return False
+
+        if start_x == dest_x:
+            step = 1 if dest_y > start_y else -1
+            for y in range(start_y + step, dest_y, step):
+                if self.get_piece(start_x, y) != ' ':
+                    return False
+        else:
+            step = 1 if dest_x > start_x else -1
+            for x in range(start_x + step, dest_x, step):
+                if self.get_piece(x, start_y) != ' ':
+                    return False
+
+        return True
+
+    def valid_knight_move(self, start_x, start_y, dest_x, dest_y):
+        x_diff = abs(start_x - dest_x)
+        y_diff = abs(start_y - dest_y)
+        return (x_diff == 2 and y_diff == 1) or (x_diff == 1 and y_diff == 2)
+
+    def valid_castling_move(self, start_x, start_y, dest_x, dest_y):
+        start_piece = self.get_piece(start_x, start_y)
+        dest_piece = self.get_piece(dest_x, dest_y)
+
+        if start_piece.lower() != 'k' or dest_piece.lower() != 'r':
+            return False
+
+        if self.king_moved[self.turn]:
+            return False
+
+        if self.is_in_check(start_x, self.turn):
+            return False
+
+        if dest_y < start_y:
+            if self.queen_rook_moved[self.turn]:
+                return False
+
+            for y in range(dest_y + 1, start_y):
+                if self.get_piece(start_x, y) != ' ':
+                    return False
+
+        elif dest_y > start_y:
+            if self.king_rook_moved[self.turn]:
+                return False
+
+            for y in range(start_y + 1, dest_y):
+                if self.get_piece(start_x, y) != ' ':
+                    return False
+
+        return True
+
+# Main function is not used, instead, `game.py` is executed using
+def main():
+    chess_board = ChessBoard()
+
+    #chess_board.move_piece(1, 4, 3, 4)
+    #chess_board.move_piece(6, 3, 4, 3)
+    #chess_board.move_piece(0, 4, 0, 6)  # King-side castling
+    #chess_board.move_piece(7, 4, 7, 6)  # King-side castling
+
+    #chess_board.print_board()
+
+if __name__ == "__main__":
+    main()
