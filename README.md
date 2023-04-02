@@ -5,8 +5,9 @@ This is a simple chess game implemented in Python that is actively maintained as
 ## Features
 - Scoreboard displayed in red for both sides
 - BROKEN - Undo move functionality using the `u` key
-- Piece logic for all moves except castling and en passant
+- Piece logic for all moves except en passant and pawn promotion
 - Turn-based gameplay with no cheating allowed
+- Implements castling perfectly!
 
 ## Installation Instructions
 

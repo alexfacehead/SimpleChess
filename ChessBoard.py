@@ -113,11 +113,11 @@ class ChessBoard:
             return False
 
         if is_short_castling:
-            if not self.is_clear_for_castle(start_y, start_y + 1, dest_y):
+            if not self.is_clear_for_castle(start_y, start_y, dest_x, dest_y):
                 print("DEBUG: Returning false from handling castling because path is not clear #1")
                 return False
         else:
-            if not self.is_clear_for_castle(start_y, start_y - 1, dest_y - 1):
+            if not self.is_clear_for_castle(start_y, start_y, dest_x, dest_y):
                 print("DEBUG: Returning false from handling castling because path is not clear #2")
                 return False
 
@@ -134,12 +134,16 @@ class ChessBoard:
             return True
         return False
     
-    def is_clear_for_castle(self, start_x, start_y, end_y):
-        step = 1 if start_y < end_y else -1
-        for y in range(start_y + step, end_y, step):
-            if self.get_piece(start_x, y) != ' ':
-                return False
+    def is_space_empty(self, x, y):
+        return self.get_piece(x, y) == ' '
 
+    def is_clear_for_castle(self, start_x, start_y, dest_x, dest_y):
+        print("DEBUG: Checking if path is clear for castle")
+        step = 1 if start_y < dest_y else -1
+        for y in range(start_y + step, dest_y, step):
+            if not self.is_space_empty(dest_x, y):
+                return False
+        print("DEBUG: Path is clear!")
         return True
 
     def check_if_in_check(self, king_x, king_y, turn):
@@ -287,6 +291,9 @@ class ChessBoard:
         x_diff = abs(start_x - dest_x)
         y_diff = abs(start_y - dest_y)
         return (x_diff == 2 and y_diff == 1) or (x_diff == 1 and y_diff == 2)
+
+    def is_space_empty(self, x, y):
+        return self.get_piece(x, y) == ' '
 
 def main():
     chess_board = ChessBoard()
