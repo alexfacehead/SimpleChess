@@ -329,8 +329,24 @@ class ChessBoard:
 
         return True
 
+    def do_pawn_promotion(self, dest_x, dest_y, isupper):
+        print("Attempting pawn promotion")
+        temp_piece = 'q'
+        val = -1
+        if isupper:
+            temp_piece = 'Q'
+            val = 1
+        self.set_piece(dest_x, dest_y, temp_piece)
+        self.set_piece(dest_x - val, dest_y, ' ')
+        print("Finished pawn promotion")
+        return True
+    
     def valid_pawn_move(self, start_x, start_y, dest_x, dest_y):
         piece = self.get_piece(start_x, start_y)
+        print ("DEBUG: piece.islower == " + str(piece.islower()))
+        if (piece.isupper() and dest_x == 7 or piece.islower() and dest_x == 0) and piece.lower() == 'p':
+            print("Pawn promotion square reached")
+            #self.do_pawn_promotion(dest_x, dest_y, piece.isupper())
         is_white = piece.isupper()
         direction = 1 if is_white else -1
         dest_piece = self.get_piece(dest_x, dest_y)

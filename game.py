@@ -1,6 +1,6 @@
 import pygame
 from ChessBoard import ChessBoard
-from GUI import draw_board, SQUARE_SIZE, WIDTH, HEIGHT
+from GUI import draw_board, draw_menu, SQUARE_SIZE, WIDTH, HEIGHT
 
 def main():
     global chess_board
@@ -66,6 +66,7 @@ def main():
                             king_selected = piece.lower() == 'k'
 
         draw_board(screen, chess_board, selected_piece)
+        draw_menu(screen)  # Add this line
         draw_score(screen, chess_board)
         pygame.display.update()
 

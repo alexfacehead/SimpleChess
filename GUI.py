@@ -10,8 +10,8 @@ ROWS, COLS = 8, 8
 SQUARE_SIZE = WIDTH // COLS
 
 # Colors
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+LIGHT_BROWN = (245, 222, 179)
+DARK_BROWN = (139, 69, 19)
 
 # Initialize Pygame
 pygame.init()
@@ -36,14 +36,21 @@ pieces = {
     "p": load_image("images/black_pawn.png")
 }
 
+def draw_menu(screen):
+    MENU_WIDTH, MENU_HEIGHT = 200, 600
+    MENU_COLOR = (128, 128, 128)
+    menu_rect = pygame.Rect(WIDTH, 0, MENU_WIDTH, MENU_HEIGHT)
+    pygame.draw.rect(screen, MENU_COLOR, menu_rect)
+    # Add more menu elements here as needed
+
 # Function to handle graphical board display
 def draw_board(screen, chess_board, selected_piece=None):
     BORDER_WIDTH = 4  # Width of the border around the selected square
-    BORDER_COLOR = (255, 255, 0)  # Yellow color for the border
+    BORDER_COLOR = SELECTED_COLOR  # Yellow color for the border
 
     for row in range(ROWS):
         for col in range(COLS):
-            color = WHITE if (row + col) % 2 == 0 else BLACK
+            color = LIGHT_BROWN if (row + col) % 2 == 0 else DARK_BROWN
             pygame.draw.rect(screen, color, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
             piece = chess_board.get_piece(row, col)
