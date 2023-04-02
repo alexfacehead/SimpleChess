@@ -78,8 +78,20 @@ class ChessBoard:
                 self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
                 self.turn = 'black' if self.turn == 'white' else 'white'
             else:
+                score_gain = 0
+                if destination_piece != ' ':
+                    print("DEBUG: Setting score_gain")
+                    score_gain = self.piece_values[destination_piece.lower()]
+                    print("DEBUG: Score_gain = " + str(score_gain))
+                    if destination_piece.islower():
+                        print("Adding to white score")
+                        self.score['white'] += score_gain
+                    else:
+                        self.score['black'] += score_gain
                 self.set_piece(dest_x, dest_y, piece)
                 self.set_piece(start_x, start_y, ' ')
+                self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, score_gain))
+                print("DEBUG: Move history: " + str(self.move_history))
                 if piece_type == "r" and start_x == 0:
                     if start_y == 0:
                         self.queen_rook_moved[self.turn] = True
@@ -196,22 +208,46 @@ class ChessBoard:
     def get_score(self):
         return self.score
 
+    # Press `u` to undo any move!
     def undo_move(self):
         print("Attempting undo")
         if not self.move_history:
+            print("Not move history")
             return False
 
         last_move = self.move_history.pop()
-        (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
+        (start_x, start_y), (dest_x, dest_y), moved_piece, score_change = last_move
+        
+        is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
 
-        self.board[start_x][start_y] = moved_piece
-        self.board[dest_x][dest_y] = destination_piece
+        if is_castle_move:
+            # Undo king move
+            self.board[start_x][start_y] = moved_piece
+            self.board[dest_x][dest_y] = ' '
+            
+            # Determine if it was a short or long castling
+            is_short_castling = dest_y > start_y
 
-        if destination_piece != ' ':
-            if destination_piece.isupper():
-                self.score['white'] -= score_change
+            # Undo rook move
+            if is_short_castling:
+                self.board[start_x][start_y + 1] = 'R' if moved_piece == 'K' else 'r'
+                self.board[start_x][dest_y - 1] = ' '
             else:
-                self.score['black'] -= score_change
+                # Remove duplicate king from C1
+                self.board[start_x][dest_y + 1] = ' '
+                # Set the rook back to where it was
+                self.board[start_x][start_y - 1] = 'R' if moved_piece == 'K' else 'r'
+                self.board[start_x][dest_y - 2] = ' '
+
+        else:
+            self.board[start_x][start_y] = moved_piece
+            self.board[dest_x][dest_y] = ' '
+
+            if score_change != 0:
+                if moved_piece.isupper():
+                    self.score['white'] -= score_change
+                else:
+                    self.score['black'] -= score_change
 
         self.turn = 'black' if self.turn == 'white' else 'white'
 
