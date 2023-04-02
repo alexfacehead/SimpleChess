@@ -2,7 +2,7 @@ import pygame
 from ChessBoard import ChessBoard
 
 # Define SELECTED_COLOR as a constant, e.g., (255, 255, 0) for yellow
-SELECTED_COLOR = (255, 255, 0)
+SELECTED_COLOR = (0, 0, 255)
 
 # Constants
 WIDTH, HEIGHT = 800, 800

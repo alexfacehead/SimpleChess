@@ -45,7 +45,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_u:
-                    chess_board.undo_move()
+                    chess_board.undo_move(False)
 
             if event.type == pygame.QUIT:
                 running = False

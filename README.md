@@ -5,13 +5,13 @@ This is a simple chess game implemented in Python that is actively maintained as
 ![SimpleChess](./images/SimpleChess.png)
 
 ## Features
-- Scoreboard displayed in red for both sides
-- Yellow highlighting for selected pieces
-- Undo any move using the `u` key
+- Scoreboard displayed in dark text for both sides
+- Blue highlighting for selected pieces
+- Undo *any* move using the `u` key
 - Piece logic for all moves except en passant
-- Turn-based gameplay with no cheating allowed
+- Turn-based gameplay with no easy cheatings
 - Implements castling perfectly!
-- Pawn promotion disabled for now
+- Pawn promotion DISABLED for now
 - Very visually familiar board
 
 ## Installation Instructions

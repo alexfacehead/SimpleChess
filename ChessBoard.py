@@ -50,6 +50,20 @@ class ChessBoard:
         if (piece.isupper() and self.turn == 'black') or (piece.islower() and self.turn == 'white'):
             return False
 
+        #is_pawn_promotion = (
+            #piece.lower() == 'p' and
+            #(
+                #((self.turn == 'white' and dest_x == 7 and (start_x == 6 or abs(dest_y - start_y) == 1) and self.get_piece(dest_x, dest_y) != ' ') or
+                #(self.turn == 'black' and dest_x == 0 and (start_x == 1 or abs(dest_y - start_y) == 1) and self.get_piece(dest_x, dest_y) != ' ')) and abs(dest_x - start_x) == 1
+            #)
+        #)
+        #if is_pawn_promotion:
+        #    print("DEBUG: Is pawn promotion? " + str(is_pawn_promotion))
+        #    print("DEBUG: Adding pawn promotion to move_history")
+         #   self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
+         #   self.turn = 'black' if self.turn == 'white' else 'white'
+         #   return self.do_pawn_promotion(dest_x, dest_y, 1, piece)
+
         is_castle_move = piece.lower() == "k" and abs(dest_y - start_y) > 1
         if not is_castle_move and destination_piece != ' ' and piece.islower() == destination_piece.islower():
             return False
@@ -75,7 +89,7 @@ class ChessBoard:
             if is_castle_move:
                 if not self.handle_castling_conditions(start_x, start_y, dest_x, dest_y):
                     return False
-                self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
+                self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, destination_piece, 0))
                 self.turn = 'black' if self.turn == 'white' else 'white'
             else:
                 score_gain = 0
@@ -90,7 +104,7 @@ class ChessBoard:
                         self.score['black'] += score_gain
                 self.set_piece(dest_x, dest_y, piece)
                 self.set_piece(start_x, start_y, ' ')
-                self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, score_gain))
+                self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, destination_piece, score_gain))
                 print("DEBUG: Move history: " + str(self.move_history))
                 if piece_type == "r" and start_x == 0:
                     if start_y == 0:
@@ -138,7 +152,7 @@ class ChessBoard:
             print("DEBUG: Rook y: " + str(dest_y))
             print("DEBUG: King y: " + str(start_y))
             self.perform_castle(start_x, start_y, dest_x, dest_y, is_short_castling)
-            self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
+            self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, self.get_piece(dest_x, dest_y), 0))
             print("DEBUG: Castling performed: {} to {}".format(ChessBoard.get_pos(start_x, start_y), ChessBoard.get_pos(dest_x, dest_y)))
             print("Current list of move history: " + str(self.move_history))
             print("Current score: " + str(self.get_score()))
@@ -180,7 +194,7 @@ class ChessBoard:
         return False
 
     def perform_castle(self, king_x, king_y, rook_x, rook_y, is_short_castling):
-        print("Performing the castling (set_piece attempt is to follow)")
+        print("DEBUG: Performing the castling (set_piece attempt is to follow)")
         king_destination_y = king_y + 2 if is_short_castling else king_y - 2
         self.set_piece(king_x, king_destination_y, self.get_piece(king_x, king_y))
         self.set_piece(king_x, king_y, ' ')
@@ -196,27 +210,84 @@ class ChessBoard:
             else:
                 self.king_rook_moved['white'] = True
         elif self.get_piece(king_x, king_destination_y).islower():
-            print("Setting king_moved['black'] to True #1")
+            print("DEBUG: Setting king_moved['black'] to True #1")
             self.king_moved['black'] = True
             if rook_y < king_y:
                 self.queen_rook_moved['black'] = True
             else:
-                print("Setting king_moved['black'] to True #2")
+                print("DEBUG: Setting king_moved['black'] to True #2")
                 self.king_rook_moved['black'] = True
         print("End of perform castle")
 
     def get_score(self):
         return self.score
 
-    # New undo move undos every move including castling + scores
-    def undo_move(self):
+    def undo_move(self, is_recursive):
         print("Attempting undo")
         if not self.move_history:
-            print("Not move history")
             return False
 
         last_move = self.move_history.pop()
-        (start_x, start_y), (dest_x, dest_y), moved_piece, score_change = last_move
+        (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
+
+        is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
+
+        if is_castle_move:
+            # Determine if it was a short or long castling
+            is_short_castling = dest_y > start_y
+
+            # Undo king move
+            self.set_piece(start_x, start_y, moved_piece)
+            self.set_piece(dest_x, dest_y, ' ')
+
+            # Undo rook move
+            if is_short_castling:
+                self.set_piece(start_x, start_y + 1, 'R' if moved_piece == 'K' else 'r')
+                self.set_piece(start_x, dest_y - 1, ' ')
+            else:
+                self.set_piece(start_x, start_y - 1, 'R' if moved_piece == 'K' else 'r')
+                self.set_piece(start_x, dest_y + 1, ' ')
+                self.set_piece(start_x, dest_y + 2, ' ')  # Fix the issue with the leftover rook
+
+            # Reset king_rook_moved, queen_rook_moved, and king_moved
+            color = 'white' if moved_piece.isupper() else 'black'
+            if is_short_castling:
+                self.king_rook_moved[color] = False
+                self.set_piece(start_x, 7, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
+                self.set_piece(start_x, 5, ' ')  # Remove the rook from its moved position
+            else:
+                self.queen_rook_moved[color] = False
+                self.set_piece(start_x, 0, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
+                self.set_piece(start_x, 3, ' ')  # Remove the rook from its moved position
+            self.king_moved[color] = False
+
+        else:
+            self.set_piece(start_x, start_y, moved_piece)
+            self.set_piece(dest_x, dest_y, destination_piece)
+
+            if score_change != 0:
+                if moved_piece.isupper():
+                    self.score['white'] -= score_change
+                else:
+                    self.score['black'] -= score_change
+
+        if not self.move_history and not is_recursive:
+            print("No move history")
+            self.turn = 'black' if self.turn == 'white' else 'white'
+            self.undo_move(True)
+            return True
+        self.turn = 'black' if self.turn == 'white' else 'white'
+
+        return True
+    
+    # New undo move undos every move including castling + scores
+    def undo_move_old(self, is_recursive):
+        print("Attempting undo")
+        if not self.move_history:
+            return False
+
+        last_move = self.move_history.pop()
+        (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
 
         is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
 
@@ -259,51 +330,11 @@ class ChessBoard:
                 else:
                     self.score['black'] -= score_change
 
-        self.turn = 'black' if self.turn == 'white' else 'white'
-
-        return True
-
-    # Press `u` to undo any move!
-    def undo_move_old(self):
-        print("Attempting undo")
-        if not self.move_history:
-            print("Not move history")
-            return False
-
-        last_move = self.move_history.pop()
-        (start_x, start_y), (dest_x, dest_y), moved_piece, score_change = last_move
-        
-        is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
-
-        if is_castle_move:
-            # Undo king move
-            self.board[start_x][start_y] = moved_piece
-            self.board[dest_x][dest_y] = ' '
-            
-            # Determine if it was a short or long castling
-            is_short_castling = dest_y > start_y
-
-            # Undo rook move
-            if is_short_castling:
-                self.board[start_x][start_y + 1] = 'R' if moved_piece == 'K' else 'r'
-                self.board[start_x][dest_y - 1] = ' '
-            else:
-                # Remove duplicate king from C1
-                self.board[start_x][dest_y + 1] = ' '
-                # Set the rook back to where it was
-                self.board[start_x][start_y - 1] = 'R' if moved_piece == 'K' else 'r'
-                self.board[start_x][dest_y - 2] = ' '
-
-        else:
-            self.board[start_x][start_y] = moved_piece
-            self.board[dest_x][dest_y] = ' '
-
-            if score_change != 0:
-                if moved_piece.isupper():
-                    self.score['white'] -= score_change
-                else:
-                    self.score['black'] -= score_change
-
+        if not self.move_history and not is_recursive:
+            print("No move history")
+            self.turn = 'black' if self.turn == 'white' else 'white'
+            self.undo_move(True)
+            return True
         self.turn = 'black' if self.turn == 'white' else 'white'
 
         return True
@@ -329,39 +360,45 @@ class ChessBoard:
 
         return True
 
-    def do_pawn_promotion(self, dest_x, dest_y, isupper):
+    def do_pawn_promotion(self, dest_x, dest_y, step, piece):
         print("Attempting pawn promotion")
-        temp_piece = 'q'
-        val = -1
-        if isupper:
-            temp_piece = 'Q'
-            val = 1
-        self.set_piece(dest_x, dest_y, temp_piece)
-        self.set_piece(dest_x - val, dest_y, ' ')
+        print("Converting to white queen")
+        converted_piece = 'Q'
+        if piece == 'p':
+            print("Converting to black queen")
+            converted_piece = 'q'
+            step = -1
+        self.set_piece(dest_x, dest_y, converted_piece)
+        self.set_piece(dest_x - step, dest_y, ' ')
         print("Finished pawn promotion")
         return True
     
+    def is_pawn_starting_position(self, x, is_white):
+        return (x == 1 and is_white) or (x == 6 and not is_white)
+
     def valid_pawn_move(self, start_x, start_y, dest_x, dest_y):
         piece = self.get_piece(start_x, start_y)
-        print ("DEBUG: piece.islower == " + str(piece.islower()))
-        if (piece.isupper() and dest_x == 7 or piece.islower() and dest_x == 0) and piece.lower() == 'p':
-            print("Pawn promotion square reached")
-            #self.do_pawn_promotion(dest_x, dest_y, piece.isupper())
         is_white = piece.isupper()
         direction = 1 if is_white else -1
         dest_piece = self.get_piece(dest_x, dest_y)
 
-        if dest_y == start_y and dest_x == start_x + direction and dest_piece == ' ':
-            return True
+        if dest_piece != ' ' and dest_y == start_y:
+            return False
 
-        if abs(dest_y - start_y) == 1 and dest_x == start_x + direction and dest_piece != ' ' and dest_piece.isupper() != is_white:
-            destination_piece_present = self.get_piece(dest_x, dest_y) != ' '
-            if destination_piece_present:
-                return True
+        if abs(dest_y - start_y) == 1 and dest_piece != ' ' and dest_piece.isupper() != is_white:
+            return start_x + direction == dest_x  # Ensure the pawn only moves forward.
 
-        if (start_x == 1 and is_white) or (start_x == 6 and not is_white):
-            if dest_y == start_y and dest_x == start_x + 2 * direction and dest_piece == ' ' and self.get_piece(start_x + direction, start_y) == ' ':
+        if dest_y == start_y:
+            if dest_x == start_x + direction and dest_piece == ' ':
                 return True
+            if self.is_pawn_starting_position(start_x, is_white):
+                if dest_x == start_x + 2 * direction and dest_piece == ' ' and self.get_piece(start_x + direction, start_y) == ' ':
+                    return True
+
+        # Check for diagonal pawn promotion
+        if (is_white and dest_x == 7) or (not is_white and dest_x == 0):
+            if abs(dest_y - start_y) == 1:
+                return start_x + direction == dest_x
 
         return False
 
