@@ -2,6 +2,8 @@
 
 This is a simple chess game implemented in Python that is actively maintained as of April 2 2023. It currently does not support en passant or pawn promotion. These features are planned for future implementation, and any advice on simplifying modularization is welcome. Enjoy this minimalistic chess game!
 
+![SimpleChess](SimpleChess,png "SimpleChess")
+
 ## Features
 - Scoreboard displayed in red for both sides
 - Yellow highlighting for selected pieces

@@ -6,26 +6,37 @@ def main():
     global chess_board
     chess_board = ChessBoard()
     DEBUG_FLAG = True
-    RED = (255, 0, 0)
+    RED = (0, 0, 0)
 
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess")
 
+    def draw_text_with_border(text, font, color, bgcolor, x, y, screen):
+        text_surf = font.render(text, True, color)
+
+        bg_surf = font.render(text, True, bgcolor)
+        for i in range(-2, 3):
+            for j in range(-2, 3):
+                if i != 0 or j != 0:
+                    screen.blit(bg_surf, (x + i, y + j))
+
+        screen.blit(text_surf, (x, y))
+
     def draw_score(screen, chess_board):
         font = pygame.font.Font(None, 48)
         score = chess_board.get_score()
-        white_score_text = font.render(f"White: {score['white']}", True, RED)
-        black_score_text = font.render(f"Black: {score['black']}", True, RED)
+        white_score_text = f"White: {score['white']}"
+        black_score_text = f"Black: {score['black']}"
 
-        screen.blit(white_score_text, (10, 10))
+        draw_text_with_border(white_score_text, font, RED, (255, 255, 255), 10, 10, screen)
 
-        black_score_width = black_score_text.get_width()
-        black_score_height = black_score_text.get_height()
+        black_score_width = font.size(black_score_text)[0]
+        black_score_height = font.size(black_score_text)[1]
         margin = 10
         black_score_x = WIDTH - black_score_width - margin
         black_score_y = HEIGHT - black_score_height - margin
 
-        screen.blit(black_score_text, (black_score_x, black_score_y))
+        draw_text_with_border(black_score_text, font, RED, (255, 255, 255), black_score_x, black_score_y, screen)
 
     running = True
     selected_piece = None
@@ -66,7 +77,7 @@ def main():
                             king_selected = piece.lower() == 'k'
 
         draw_board(screen, chess_board, selected_piece)
-        draw_menu(screen)  # Add this line
+        draw_menu(screen)
         draw_score(screen, chess_board)
         pygame.display.update()
 
