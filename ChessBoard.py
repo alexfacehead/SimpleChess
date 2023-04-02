@@ -94,60 +94,6 @@ class ChessBoard:
                 return True
         return False
 
-    def move_piece_old(self, start_x, start_y, dest_x, dest_y):
-        piece = self.get_piece(start_x, start_y)
-        destination_piece = self.get_piece(dest_x, dest_y)
-        if (piece.isupper() and self.turn == 'black') or (piece.islower() and self.turn == 'white'):
-            return False
-
-        is_castle_move = piece.lower() == "k" and abs(dest_y - start_y) > 1
-        print("DEBUG: Is castle move? " + str(is_castle_move))
-        if not is_castle_move and destination_piece != ' ' and piece.islower() == destination_piece.islower():
-            print("DEBUG: Castling not working")
-            return False
-
-        is_valid_move = False
-
-        piece_type = piece.lower()
-        valid_move_methods = {
-            'r': self.valid_rook_move,
-            'n': self.valid_knight_move,
-            'b': self.valid_bishop_move,
-            'q': self.valid_queen_move,
-            'k': self.valid_king_move,
-            'p': self.valid_pawn_move
-        }
-
-        if piece_type in valid_move_methods:
-            is_valid_move = valid_move_methods[piece_type](start_x, start_y, dest_x, dest_y)
-            if (is_castle_move):
-                is_valid_move = True
-            print("DEBUG: Is valid move after checking valid_move_methods? " + str(is_valid_move))
-
-        if is_valid_move:
-            if is_castle_move:
-                if not self.handle_castling_conditions(start_x, start_y, dest_x, dest_y):
-                    return False
-                # Update king_moved
-                print("Handle castling conditions returned true, setting king_moved[" + str(self.turn) + "]" + "to True")
-                self.king_moved[self.turn] = True
-            else:
-                self.set_piece(dest_x, dest_y, piece)
-                self.set_piece(start_x, start_y, ' ')
-                if piece_type == "r" and start_x == 0:
-                    if start_y == 0:
-                        self.queen_rook_moved[self.turn] = True
-                    elif start_y == 7:
-                        self.king_rook_moved[self.turn] = True
-                elif piece_type == "r" and start_x == 7:
-                    if start_y == 0:
-                        self.queen_rook_moved[self.turn] = True
-                    elif start_y == 7:
-                        self.king_rook_moved[self.turn] = True
-                self.turn = 'black' if self.turn == 'white' else 'white'
-                return True
-        return False
-
     def handle_castling_conditions(self, start_x, start_y, dest_x, dest_y):
         print("DEBUG: Handling castling block entered")
         piece = self.get_piece(start_x, start_y)
@@ -247,20 +193,18 @@ class ChessBoard:
         return self.score
 
     def undo_move(self):
-        print("attempted undo")
+        print("Attempting undo")
         if not self.move_history:
             return False
 
         last_move = self.move_history.pop()
-        (start_x, start_y), (dest_x, dest_y), prev_piece, score_change = last_move
+        (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
 
-        moved_piece = self.get_piece(dest_x, dest_y)
         self.board[start_x][start_y] = moved_piece
+        self.board[dest_x][dest_y] = destination_piece
 
-        self.board[dest_x][dest_y] = prev_piece
-
-        if prev_piece != ' ':
-            if prev_piece.isupper():
+        if destination_piece != ' ':
+            if destination_piece.isupper():
                 self.score['white'] -= score_change
             else:
                 self.score['black'] -= score_change

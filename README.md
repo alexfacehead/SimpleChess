@@ -1,10 +1,10 @@
 # Simple Python Chess by alexfacehead
 
-This is a simple chess game implemented in Python. It currently does not support castling, en passant, or pawn promotion. These features are planned for future implementation, and any advice on simplifying modularization is welcome. Enjoy this minimalistic chess game!
+This is a simple chess game implemented in Python that is actively maintained as of April 2 2023. It currently does not support en passant or pawn promotion. These features are planned for future implementation, and any advice on simplifying modularization is welcome. Enjoy this minimalistic chess game!
 
 ## Features
 - Scoreboard displayed in red for both sides
-- Undo move functionality using the `u` key
+- BROKEN - Undo move functionality using the `u` key
 - Piece logic for all moves except castling and en passant
 - Turn-based gameplay with no cheating allowed
 
