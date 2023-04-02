@@ -208,8 +208,63 @@ class ChessBoard:
     def get_score(self):
         return self.score
 
-    # Press `u` to undo any move!
+    # New undo move undos every move including castling + scores
     def undo_move(self):
+        print("Attempting undo")
+        if not self.move_history:
+            print("Not move history")
+            return False
+
+        last_move = self.move_history.pop()
+        (start_x, start_y), (dest_x, dest_y), moved_piece, score_change = last_move
+
+        is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
+
+        if is_castle_move:
+            # Determine if it was a short or long castling
+            is_short_castling = dest_y > start_y
+
+            # Undo king move
+            self.set_piece(start_x, start_y, moved_piece)
+            self.set_piece(dest_x, dest_y, ' ')
+
+            # Undo rook move
+            if is_short_castling:
+                self.set_piece(start_x, start_y + 1, 'R' if moved_piece == 'K' else 'r')
+                self.set_piece(start_x, dest_y - 1, ' ')
+            else:
+                self.set_piece(start_x, start_y - 1, 'R' if moved_piece == 'K' else 'r')
+                self.set_piece(start_x, dest_y + 1, ' ')
+                self.set_piece(start_x, dest_y + 2, ' ')  # Fix the issue with the leftover rook
+
+            # Reset king_rook_moved, queen_rook_moved, and king_moved
+            color = 'white' if moved_piece.isupper() else 'black'
+            if is_short_castling:
+                self.king_rook_moved[color] = False
+                self.set_piece(start_x, 7, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
+                self.set_piece(start_x, 5, ' ')  # Remove the rook from its moved position
+            else:
+                self.queen_rook_moved[color] = False
+                self.set_piece(start_x, 0, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
+                self.set_piece(start_x, 3, ' ')  # Remove the rook from its moved position
+            self.king_moved[color] = False
+
+        else:
+            self.set_piece(start_x, start_y, moved_piece)
+            self.set_piece(dest_x, dest_y, ' ')
+
+            if score_change != 0:
+                if moved_piece.isupper():
+                    self.score['white'] -= score_change
+                else:
+                    self.score['black'] -= score_change
+
+        self.turn = 'black' if self.turn == 'white' else 'white'
+
+        return True
+
+    # Press `u` to undo any move!
+    def undo_move_old(self):
         print("Attempting undo")
         if not self.move_history:
             print("Not move history")
@@ -333,41 +388,6 @@ class ChessBoard:
 
 def main():
     chess_board = ChessBoard()
-
-    print("Initial board:")
-    chess_board.print_board()
-
-    # White side castling (E1 to H1)
-    print("\nWhite side castling (E1 to H1):")
-    chess_board.move_piece(1, 4, 3, 4)
-    chess_board.move_piece(6, 3, 4, 3)
-    chess_board.move_piece(0, 4, 0, 6)
-    chess_board.move_piece(0, 7, 0, 5)
-    chess_board.print_board()
-
-    # White side castling (E1 to A1)
-    print("\nWhite side castling (E1 to A1):")
-    chess_board.undo_move()
-    chess_board.undo_move()
-    chess_board.move_piece(0, 4, 0, 2)
-    chess_board.move_piece(0, 0, 0, 3)
-    chess_board.print_board()
-
-    # Black side castling (E8 to H8)
-    print("\nBlack side castling (E8 to H8):")
-    chess_board.move_piece(1, 3, 3, 3)
-    chess_board.move_piece(6, 4, 4, 4)
-    chess_board.move_piece(7, 4, 7, 6)
-    chess_board.move_piece(7, 7, 7, 5)
-    chess_board.print_board()
-
-    # Black side castling (E8 to A8)
-    print("\nBlack side castling (E8 to A8):")
-    chess_board.undo_move()
-    chess_board.undo_move()
-    chess_board.move_piece(7, 4, 7, 2)
-    chess_board.move_piece(7, 0, 7, 3)
-    chess_board.print_board()
 
 if __name__ == "__main__":
     main()
