@@ -4,7 +4,16 @@ This is a simple chess game implemented in Python that is actively maintained as
 
 ![SimpleChess](./images/SimpleChess.png)
 
+## How to Play
+- Utilize the help menu if you do not know the rules of chess (TBA)
+- Press `Resume` to begin the game or to return from the pause screen
+- Press the `ESC` key to open the menu
+
 ## Features
+- Pull up the main menu with `ESC`
+     Main menu that has `Resume`, `Scoreboard`, `Help`, and `Import/Export` buttons
+        - Help menu - TBA
+        - Import/Export functionality - TBA
 - Scoreboard displayed in dark text for both sides
 - Blue highlighting for selected pieces
 - Undo *any* move using the `u` key
@@ -13,6 +22,7 @@ This is a simple chess game implemented in Python that is actively maintained as
 - Implements castling perfectly!
 - Pawn promotion DISABLED for now
 - Very visually familiar board
+- A variation on chess pieces contained in /images_copy/
 
 ## Installation Instructions
 

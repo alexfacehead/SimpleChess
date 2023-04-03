@@ -279,65 +279,6 @@ class ChessBoard:
         self.turn = 'black' if self.turn == 'white' else 'white'
 
         return True
-    
-    # New undo move undos every move including castling + scores
-    def undo_move_old(self, is_recursive):
-        print("Attempting undo")
-        if not self.move_history:
-            return False
-
-        last_move = self.move_history.pop()
-        (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
-
-        is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
-
-        if is_castle_move:
-            # Determine if it was a short or long castling
-            is_short_castling = dest_y > start_y
-
-            # Undo king move
-            self.set_piece(start_x, start_y, moved_piece)
-            self.set_piece(dest_x, dest_y, ' ')
-
-            # Undo rook move
-            if is_short_castling:
-                self.set_piece(start_x, start_y + 1, 'R' if moved_piece == 'K' else 'r')
-                self.set_piece(start_x, dest_y - 1, ' ')
-            else:
-                self.set_piece(start_x, start_y - 1, 'R' if moved_piece == 'K' else 'r')
-                self.set_piece(start_x, dest_y + 1, ' ')
-                self.set_piece(start_x, dest_y + 2, ' ')  # Fix the issue with the leftover rook
-
-            # Reset king_rook_moved, queen_rook_moved, and king_moved
-            color = 'white' if moved_piece.isupper() else 'black'
-            if is_short_castling:
-                self.king_rook_moved[color] = False
-                self.set_piece(start_x, 7, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
-                self.set_piece(start_x, 5, ' ')  # Remove the rook from its moved position
-            else:
-                self.queen_rook_moved[color] = False
-                self.set_piece(start_x, 0, 'R' if moved_piece == 'K' else 'r')  # Move the rook back to its original position
-                self.set_piece(start_x, 3, ' ')  # Remove the rook from its moved position
-            self.king_moved[color] = False
-
-        else:
-            self.set_piece(start_x, start_y, moved_piece)
-            self.set_piece(dest_x, dest_y, ' ')
-
-            if score_change != 0:
-                if moved_piece.isupper():
-                    self.score['white'] -= score_change
-                else:
-                    self.score['black'] -= score_change
-
-        if not self.move_history and not is_recursive:
-            print("No move history")
-            self.turn = 'black' if self.turn == 'white' else 'white'
-            self.undo_move(True)
-            return True
-        self.turn = 'black' if self.turn == 'white' else 'white'
-
-        return True
 
     def print_board(self):
         for row in self.board:
