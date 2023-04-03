@@ -1,5 +1,4 @@
 import pygame
-from ChessBoard import ChessBoard
 
 # Define SELECTED_COLOR as a constant, e.g., (255, 255, 0) for yellow
 SELECTED_COLOR = (0, 255, 0)
@@ -71,6 +70,7 @@ def draw_transparent_background(screen):
     screen.blit(surf, (0, 0))
 
 def draw_menu(screen, menu_state):
+    #sprint("draw_menu function used")
     MENU_WIDTH, MENU_HEIGHT = 600, 400
     MENU_COLOR = (153, 102, 51)
     MENU_BORDER_COLOR = (0, 0, 0)

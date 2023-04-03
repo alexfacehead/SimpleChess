@@ -1,6 +1,7 @@
 import pygame
 from ChessBoard import ChessBoard
-from GUI import draw_board, draw_main_menu, draw_menu, draw_transparent_background, draw_scoreboard, load_images, SQUARE_SIZE, WIDTH, HEIGHT, help_function, import_export_function
+from GUI import draw_board, draw_menu, draw_transparent_background, draw_scoreboard, load_images, SQUARE_SIZE, WIDTH, HEIGHT, help_function, import_export_function
+from network import Network
 
 def main():
     chess_board = ChessBoard()
@@ -74,7 +75,7 @@ def main():
                     handle_menu_click((x, y))
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_u:
+                if event.key == pygame.K_u and game_state == "play":
                     chess_board.undo_move(False)
                 elif event.key == pygame.K_ESCAPE:
                     game_state = "menu"
@@ -98,6 +99,7 @@ def main():
                             move_successful = chess_board.move_piece(selected_piece[0], selected_piece[1], row, col)
 
                             if move_successful:
+                                chess_board = Network.network.send((selected_piece[0], selected_piece[1], row, col))
                                 selected_piece = None
                             elif piece != ' ':
                                 selected_piece = (row, col)

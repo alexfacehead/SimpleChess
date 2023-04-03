@@ -139,11 +139,11 @@ class ChessBoard:
             return False
 
         if is_short_castling:
-            if not self.is_clear_for_castle(start_y, start_y, dest_x, dest_y):
+            if not self.is_clear_for_castle(start_y, dest_x, dest_y):
                 print("DEBUG: Returning false from handling castling because path is not clear #1")
                 return False
         else:
-            if not self.is_clear_for_castle(start_y, start_y, dest_x, dest_y):
+            if not self.is_clear_for_castle(start_y, dest_x, dest_y):
                 print("DEBUG: Returning false from handling castling because path is not clear #2")
                 return False
 
@@ -163,7 +163,7 @@ class ChessBoard:
     def is_space_empty(self, x, y):
         return self.get_piece(x, y) == ' '
 
-    def is_clear_for_castle(self, start_x, start_y, dest_x, dest_y):
+    def is_clear_for_castle(self, start_y, dest_x, dest_y):
         print("DEBUG: Checking if path is clear for castle")
         step = 1 if start_y < dest_y else -1
         for y in range(start_y + step, dest_y, step):
@@ -302,16 +302,16 @@ class ChessBoard:
         return True
 
     def do_pawn_promotion(self, dest_x, dest_y, step, piece):
-        print("Attempting pawn promotion")
-        print("Converting to white queen")
+        print("DEBUG: Attempting pawn promotion")
+        print("DEBUG: Converting to white queen")
         converted_piece = 'Q'
         if piece == 'p':
-            print("Converting to black queen")
+            print("DEBUG: Converting to black queen")
             converted_piece = 'q'
             step = -1
         self.set_piece(dest_x, dest_y, converted_piece)
         self.set_piece(dest_x - step, dest_y, ' ')
-        print("Finished pawn promotion")
+        print("DEBUG: Finished pawn promotion")
         return True
     
     def is_pawn_starting_position(self, x, is_white):
@@ -379,6 +379,12 @@ class ChessBoard:
 
     def is_space_empty(self, x, y):
         return self.get_piece(x, y) == ' '
+
+    def update_state(self, new_state):
+        self.board = new_state.board
+        self.move_history = new_state.move_history
+        self.turn = new_state.turn
+        self.score = new_state.score
 
 def main():
     chess_board = ChessBoard()
