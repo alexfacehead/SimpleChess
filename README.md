@@ -3,6 +3,7 @@
 This is a simple chess game implemented in Python that is actively maintained as of April 2 2023. It currently does not support en passant or pawn promotion. These features are planned for future implementation, and any advice on simplifying modularization is welcome. Enjoy this minimalistic chess game!
 
 ![SimpleChess](./images/SimpleChess.png)
+![MainMenu](./images/mainmenu.png)
 
 ## How to Play
 - Utilize the help menu if you do not know the rules of chess (TBA)
@@ -11,10 +12,10 @@ This is a simple chess game implemented in Python that is actively maintained as
 
 ## Features
 - Pull up the main menu with `ESC`
-     Main menu that has `Resume`, `Scoreboard`, `Help`, and `Import/Export` buttons
+     - Main menu that has `Resume`, `Scoreboard`, `Help`, and `Import/Export` buttons
         - Help menu - TBA
         - Import/Export functionality - TBA
-- Scoreboard displayed in dark text for both sides
+- Scoreboard displayed in dark text for both sides, just pull up the menu and press `Scoreboard`
 - Blue highlighting for selected pieces
 - Undo *any* move using the `u` key
 - Piece logic for all moves except en passant
