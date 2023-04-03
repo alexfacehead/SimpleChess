@@ -1,10 +1,13 @@
 import socket
 import pickle
 
+with open('server.txt', 'r') as f:
+    server_data = f.read()
+
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = "67.183.2.80"
+        self.server = str(server_data)
         self.port = 5555
         self.addr = (self.server, self.port)
         self.game = self.connect()

@@ -3,7 +3,10 @@ import threading
 import pickle
 from ChessBoard import ChessBoard
 
-server = "192.168.29.113"
+with open('server.txt', 'r') as f:
+    server_data = f.read()
+
+server = str(server_data)
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

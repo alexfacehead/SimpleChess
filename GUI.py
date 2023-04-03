@@ -1,4 +1,5 @@
 import pygame
+from pygame_textinput.pygame_textinput import TextInputVisualizer
 
 # Define SELECTED_COLOR as a constant, e.g., (255, 255, 0) for yellow
 SELECTED_COLOR = (0, 255, 0)
@@ -59,14 +60,10 @@ def import_export_function():
     # Add import/export functionality here
     pass
 
-def help_function():
-    # Add help functionality here
-    pass
 
-def draw_transparent_background(screen):
-    TRANSPARENT_COLOR = (0, 0, 0, 128)
+def draw_transparent_background(screen, color=(0, 0, 0, 128)):  # Add color argument with default value
     surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-    surf.fill(TRANSPARENT_COLOR)
+    surf.fill(color)
     screen.blit(surf, (0, 0))
 
 def draw_menu(screen, menu_state):
@@ -84,13 +81,13 @@ def draw_menu(screen, menu_state):
 
 def draw_main_menu(screen):
     menu_buttons = [
-        {"text": "Resume", "function": "resume"},
-        {"text": "Scoreboard", "function": "scoreboard"},
-        {"text": "Help", "function": "help"},
-        {"text": "Import/Export", "function": "import_export"}
+        {"text": "RESUME", "function": "resume"},
+        {"text": "SCOREBOARD", "function": "scoreboard"},
+        {"text": "HELP", "function": "help"},
+        {"text": "IMPORT/EXPORT", "function": "import_export"}
     ]
 
-    button_width, button_height = 200, 50  # Increase button width for "Import/Export"
+    button_width, button_height = 225, 50  # Increase button width for "Import/Export"
     button_margin = 20
     button_start_y = ((HEIGHT - sum([button_height + button_margin for _ in menu_buttons]) - button_margin) // 2) + 20
 
@@ -98,7 +95,7 @@ def draw_main_menu(screen):
         button_x = (WIDTH - button_width) // 2
         button_y = button_start_y + (button_height + button_margin) * i
         button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-        pygame.draw.rect(screen, (128, 128, 128), button_rect)
+        pygame.draw.rect(screen, (255, 255, 255), button_rect)
         pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
 
         font = pygame.font.Font(None, 36)
@@ -112,13 +109,13 @@ def draw_main_menu(screen):
     return menu_buttons
 
 def draw_scoreboard(screen, chess_board):
-    font = pygame.font.Font(None, 36)
+    font = pygame.font.Font(None, 48)
     score = chess_board.get_score()
     white_score_text = f"White: {score['white']}"
     black_score_text = f"Black: {score['black']}"
 
     white_score_pos = (WIDTH // 2 - font.size(white_score_text)[0] // 2, HEIGHT // 2 - 50)
-    screen.blit(font.render(white_score_text, True, (0, 0, 0)), white_score_pos)
+    screen.blit(font.render(white_score_text, True, (255, 255, 255)), white_score_pos)
 
     black_score_pos = (WIDTH // 2 - font.size(black_score_text)[0] // 2, HEIGHT // 2 + 20)
     screen.blit(font.render(black_score_text, True, (0, 0, 0)), black_score_pos)
@@ -140,3 +137,66 @@ def draw_board(screen, chess_board, selected_piece=None):
 
             if selected_piece and (row, col) == selected_piece:
                 pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), BORDER_WIDTH)
+
+# Help menu handles server connections
+def draw_help_menu(screen, text_input_manager):
+    menu_buttons = [
+        {"text": "BACK", "function": "back"}
+    ]
+
+    # Draw help text
+    help_text = """To host an online game, enter the host's IP address in the text box. If you're the host, enable port forwarding on port 5555 and input your external IP address. For local area networks, use internal IP addresses for both users.
+
+    To find your IP address:
+    - Linux (internal): run "ip route | grep default"
+    - Windows (internal): run "ipconfig /all"
+    - External (Linux or Windows): visit ipchicken.com
+
+    Enter the IP address below."""
+
+    font = pygame.font.Font(None, 24)
+    text_surf = font.render(help_text, True, (0, 0, 0))
+    text_rect = text_surf.get_rect()
+    text_rect.center = (WIDTH // 2, HEIGHT // 2 - 100)
+    screen.blit(text_surf, text_rect)
+
+    # Create a TextInputVisualizer instance using the text_input_manager
+    text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
+
+    # Update the text_input_visualizer with the latest events
+    text_input_visualizer.update(pygame.event.get())
+
+    # Draw the textbox using the TextInputVisualizer instance
+    textbox_width, textbox_height = 400, 50
+    textbox_x = (WIDTH - textbox_width) // 2
+    textbox_y = HEIGHT // 2
+    textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
+    pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
+    screen.blit(text_input_visualizer.surface, (textbox_x + 5, textbox_y + 5))  # Use text_input_visualizer.surface
+    pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
+
+    # Draw the "BACK" button
+    button_width, button_height = 100, 50
+    button_x = (WIDTH - button_width) // 2
+    button_y = HEIGHT // 2 + 100
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    pygame.draw.rect(screen, (255, 255, 255), button_rect)
+    pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
+
+    font = pygame.font.Font(None, 36)
+    text_surf = font.render("BACK", True, (0, 0, 0))
+    text_rect = text_surf.get_rect()
+    text_rect.center = button_rect.center
+    screen.blit(text_surf, text_rect)
+
+    menu_buttons[0]["rect"] = button_rect
+    return menu_buttons, textbox_rect
+
+def draw_textbox(screen):
+    textbox_width, textbox_height = 400, 50
+    textbox_x = (WIDTH - textbox_width) // 2
+    textbox_y = HEIGHT // 2
+    textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
+    pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
+    pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
+    return textbox_rect
