@@ -1,6 +1,8 @@
 # Simple Python Chess by alexfacehead
 
-This is a simple chess game implemented in Python that is actively maintained as of April 2 2023. It currently does not support en passant or pawn promotion. These features are planned for future implementation, and any advice on simplifying modularization is welcome. Enjoy this minimalistic chess game!
+This is a simple chess game implemented in Python that is actively maintained as of April 5 2023. It supports networked local or online multiplayer, although it currently does not support en passant or pawn promotion. These features are planned for future implementation. The main menu, however, features an import/export feature, a place to enter your network address (IP), and a scoreboard.
+
+Enjoy this minimalistic chess game!
 
 ![SimpleChess](./images/SimpleChessNew.png)
 ![MainMenu](./images/mainmenu.png)
