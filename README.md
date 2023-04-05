@@ -39,4 +39,11 @@ This is a simple chess game implemented in Python that is actively maintained as
 4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
 5. Execute the script using `./run_game.sh` and enjoy the game!
 
+### For Mac:
+1. Ensure you have Python installed on your system.
+2. Ensure you have `pip` installed (skip to step 3 if you already have it).
+3. Install the `pygame` library using `pip install pygame`.
+4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
+5. Execute the script using `./run_game.sh` and enjoy the game!
+
 This README was optimized by GPT-4.
