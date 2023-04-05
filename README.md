@@ -6,6 +6,7 @@ Enjoy this minimalistic chess game!
 
 ![SimpleChess](./images/SimpleChessNew.png)
 ![MainMenu](./images/mainmenu.png)
+![ScoreBoard](./images/scoreboard.png)
 
 ## How to Play
 - Utilize the help menu if you do not know the rules of chess (TBA)
