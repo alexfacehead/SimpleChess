@@ -5,7 +5,7 @@ This is a simple chess game implemented in Python that is actively maintained as
 Enjoy this minimalistic chess game!
 
 ![SimpleChess](./images/SimpleChessNew.png)
-![MainMenu](./images/mainmenu.png)
+![MainMenu](./images/mainmenu2.png)
 ![ScoreBoard](./images/scoreboard.png)
 
 ## How to Play
