@@ -32,19 +32,19 @@ Enjoy this minimalistic chess game!
 
 ### For Windows:
 1. Ensure you have Python installed on your system.
-2. Ensure you have `pip` installed for Windows (skip to step 3 if you already have it).
+2. Install `pip` for Windows by following the instructions at https://pip.pypa.io/en/stable/installation/.
 3. Run `game.exe` in the `/python_chess/dist/` folder.
 
 ### For Linux:
 1. Ensure you have Python installed on your system.
-2. Ensure you have `pip` installed (skip to step 3 if you already have it).
+2. Install `pip` for Linux by running `sudo apt install python3-pip` (for Debian/Ubuntu-based systems) or `sudo yum install python3-pip` (for RHEL/Fedora-based systems).
 3. Install the `pygame` library using `pip install pygame`.
 4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
 5. Execute the script using `./run_game.sh` and enjoy the game!
 
 ### For Mac:
 1. Ensure you have Python installed on your system.
-2. Ensure you have `pip` installed (skip to step 3 if you already have it).
+2. Install `pip` for macOS by following the instructions at https://pip.pypa.io/en/stable/installation/.
 3. Install the `pygame` library using `pip install pygame`.
 4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
 5. Execute the script using `./run_game.sh` and enjoy the game!
