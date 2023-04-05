@@ -2,8 +2,9 @@ import pygame
 from ChessBoard import ChessBoard
 from GUI import draw_board, draw_help_menu, draw_menu, draw_transparent_background, draw_scoreboard, load_images, SQUARE_SIZE, WIDTH, HEIGHT, import_export_function
 from Network import Network
-from pygame_textinput.pygame_textinput import TextInputManager
-
+from pygame_textinput.pygame_textinput import TextInputManager, TextInputVisualizer
+import os
+import ipaddress
 
 def main():
     network = Network()
@@ -17,6 +18,7 @@ def main():
     load_images()
     
     text_input_manager = TextInputManager()  # Initialize TextInputManager
+    text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
 
     def handle_menu_click(pos, game_state, menu_buttons, textbox_rect=None):
         if (WIDTH // 2 - 300) // 2 <= pos[0] <= (WIDTH * 3 // 2 + 300) // 2 and (HEIGHT // 2 - 200) // 2 <= pos[1] <= (HEIGHT * 3 // 2 + 200) // 2:
@@ -42,8 +44,15 @@ def main():
         pygame.draw.rect(screen, BACKGROUND_COLOR, background_rect)
         pygame.draw.rect(screen, BACKGROUND_BORDER_COLOR, background_rect, 5)
 
+    def is_valid_ip(ip):
+        try:
+            ipaddress.ip_address(ip)
+            return True
+        except ValueError:
+            return False
+
     def draw_menu_background(screen):
-        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 600, 400
+        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 700, 500  # Increase width to 700 and height to 500
         BACKGROUND_COLOR = (153, 102, 51)
         BACKGROUND_BORDER_COLOR = (0, 0, 0)
         background_rect = pygame.Rect((WIDTH - BACKGROUND_WIDTH) // 2, (HEIGHT - BACKGROUND_HEIGHT) // 2, BACKGROUND_WIDTH, BACKGROUND_HEIGHT)
@@ -56,18 +65,31 @@ def main():
     mouse_button_released = True  # Add this line before the loop
     textbox_clicked = False
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN and mouse_button_released:  # Add the condition here
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and mouse_button_released:
                 mouse_button_released = False
                 x, y = pygame.mouse.get_pos()
-                game_state = handle_menu_click((x, y), game_state, menu_buttons, textbox_rect)
-            elif event.type == pygame.MOUSEBUTTONUP:  # Add this condition
+                if game_state in ["menu", "help"]:
+                    x, y = pygame.mouse.get_pos()
+                    game_state = handle_menu_click((x, y), game_state, menu_buttons, textbox_rect)
+            elif event.type == pygame.MOUSEBUTTONUP:
                 mouse_button_released = True
-            if event.type == pygame.KEYDOWN:
+
+            if event.type == pygame.QUIT:
+                running = False
+
+            if event.type == pygame.KEYDOWN:  # Fix the indentation here
                 if event.key == pygame.K_u and game_state == "play":
                     chess_board.undo_move(False)
-                elif event.key == pygame.K_ESCAPE:
+                elif event.key == pygame.K_ESCAPE and game_state == "play":
                     game_state = "menu"
+                elif event.key == pygame.K_ESCAPE and game_state == "scoreboard":
+                    game_state = "menu"
+                elif event.key == pygame.K_ESCAPE and game_state == "help":
+                    game_state = "menu"
+                elif event.key == pygame.K_ESCAPE and game_state == "menu":
+                    game_state = "play"
 
             if event.type == pygame.QUIT:
                 running = False
@@ -108,18 +130,22 @@ def main():
         if game_state == "help":
             draw_transparent_background(screen)
             draw_menu_background(screen)
-            menu_buttons, textbox_rect = draw_help_menu(screen, text_input_manager)
+            menu_buttons, textbox_rect = draw_help_menu(screen, text_input_visualizer, events)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                input_text = text_input_manager.value  # Get the input from the text_input_manager
+                file_path = "server.txt"
 
-            # Input handling logic for the textbox goes here
-            if textbox_clicked and mouse_button_released:
-                input_text = text_input_manager.get_text() # Get the input from the text_input_manager # Get the input from the text_input_manager
-                with open("server.txt", "w") as f:
-                    f.write(input_text)  # Update the server.txt file with the input
-                print(input_text)
-                text_input_manager.clear_input()  # Clear the input after updating the file
-                textbox_clicked = False
-            elif textbox_rect and textbox_rect.collidepoint(pygame.mouse.get_pos()):
-                textbox_clicked = True
+                if not os.path.exists(file_path):
+                    with open(file_path, "w") as f:
+                        pass  # You can write some initial content here if you want, or just leave it empty
+                with open("server.txt", "r") as f:
+                    if not is_valid_ip(f.read()):
+                        with open("server.txt", "w") as f:
+                            f.write(input_text)  # Update the server.txt file with the input
+                # Update the server_data variable in Network.py
+                Network.server_data = input_text
+                #print(input_text)
+                text_input_manager.clear_text()  # Clear the input after updating the file
 
         pygame.display.update()
     pygame.quit()

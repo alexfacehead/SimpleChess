@@ -13,6 +13,10 @@ class ChessBoard:
         self.queen_rook_moved = {'white': False, 'black': False}
         self.king_moved = {'white': False, 'black': False}
 
+    # Return score
+    def get_score(self):
+        return self.score
+
     # For formatting
     def get_pos(x, y):
         pos_map = {
@@ -218,9 +222,6 @@ class ChessBoard:
                 print("DEBUG: Setting king_moved['black'] to True #2")
                 self.king_rook_moved['black'] = True
         print("End of perform castle")
-
-    def get_score(self):
-        return self.score
 
     def undo_move(self, is_recursive):
         print("Attempting undo")

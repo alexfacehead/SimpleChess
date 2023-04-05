@@ -138,47 +138,56 @@ def draw_board(screen, chess_board, selected_piece=None):
             if selected_piece and (row, col) == selected_piece:
                 pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), BORDER_WIDTH)
 
-# Help menu handles server connections
-def draw_help_menu(screen, text_input_manager):
+def draw_help_menu(screen, text_input_manager, events):
     menu_buttons = [
         {"text": "BACK", "function": "back"}
     ]
 
     # Draw help text
-    help_text = """To host an online game, enter the host's IP address in the text box. If you're the host, enable port forwarding on port 5555 and input your external IP address. For local area networks, use internal IP addresses for both users.
+    help_text = """To host an online game, enter the host's IP
+address in the text box. If you're the host,
+enable port forwarding on port 5555 and
+input your external IP address. For local
+area networks, use internal IP addresses
+for both users.
 
-    To find your IP address:
-    - Linux (internal): run "ip route | grep default"
-    - Windows (internal): run "ipconfig /all"
-    - External (Linux or Windows): visit ipchicken.com
+To find your IP address:
+- Linux (internal / LAN): run "ip route | grep default"
+- Windows (internal / LAN): run "ipconfig /all"
+- External (Linux or Windows): visit ipchicken.com
 
-    Enter the IP address below."""
-
+Enter the IP address below."""
+    help_lines = help_text.split("\n")
     font = pygame.font.Font(None, 24)
-    text_surf = font.render(help_text, True, (0, 0, 0))
-    text_rect = text_surf.get_rect()
-    text_rect.center = (WIDTH // 2, HEIGHT // 2 - 100)
-    screen.blit(text_surf, text_rect)
+    line_spacing = 5
+    total_height = sum([font.size(line)[1] + line_spacing for line in help_lines]) - line_spacing
+    start_y = HEIGHT // 2 - 130 - total_height // 2 + 50  # Change 150 to 130
+
+    for i, line in enumerate(help_lines):
+        text_surf = font.render(line, True, (0, 0, 0))  # Use 'line' instead of 'help_text'
+        text_rect = text_surf.get_rect()
+        text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * i)
+        screen.blit(text_surf, text_rect)
 
     # Create a TextInputVisualizer instance using the text_input_manager
     text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
 
     # Update the text_input_visualizer with the latest events
-    text_input_visualizer.update(pygame.event.get())
+    text_input_manager.update(events)
 
-    # Draw the textbox using the TextInputVisualizer instance
+# Adjust the position of the textbox
     textbox_width, textbox_height = 400, 50
     textbox_x = (WIDTH - textbox_width) // 2
-    textbox_y = HEIGHT // 2
+    textbox_y = HEIGHT // 2 + 50  # Change from HEIGHT // 2 to HEIGHT // 2 + 50
     textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
     pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
     screen.blit(text_input_visualizer.surface, (textbox_x + 5, textbox_y + 5))  # Use text_input_visualizer.surface
     pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
 
-    # Draw the "BACK" button
+    # Adjust the position of the "BACK" button
     button_width, button_height = 100, 50
     button_x = (WIDTH - button_width) // 2
-    button_y = HEIGHT // 2 + 100
+    button_y = HEIGHT // 2 + 120  # Change from HEIGHT // 2 + 100 to HEIGHT // 2 + 120
     button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
     pygame.draw.rect(screen, (255, 255, 255), button_rect)
     pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
@@ -191,6 +200,7 @@ def draw_help_menu(screen, text_input_manager):
 
     menu_buttons[0]["rect"] = button_rect
     return menu_buttons, textbox_rect
+
 
 def draw_textbox(screen):
     textbox_width, textbox_height = 400, 50
