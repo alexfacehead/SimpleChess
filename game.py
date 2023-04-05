@@ -5,6 +5,7 @@ from Network import Network
 from pygame_textinput.pygame_textinput import TextInputManager, TextInputVisualizer
 import os
 import ipaddress
+import sys
 
 def main():
     network = Network()
@@ -34,7 +35,10 @@ def main():
                         import_export_function()
                     elif button["function"] == "back":
                         game_state = "menu"
-        return game_state
+                    elif button["function"] == "quit_game":  # Add this condition
+                        pygame.quit()
+                        sys.exit()
+            return game_state
 
     def draw_scoreboard_background(screen):
         BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 400, 200

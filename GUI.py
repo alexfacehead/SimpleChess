@@ -68,7 +68,7 @@ def draw_transparent_background(screen, color=(0, 0, 0, 128)):  # Add color argu
 
 def draw_menu(screen, menu_state):
     #sprint("draw_menu function used")
-    MENU_WIDTH, MENU_HEIGHT = 600, 400
+    MENU_WIDTH, MENU_HEIGHT = 450, 450
     MENU_COLOR = (153, 102, 51)
     MENU_BORDER_COLOR = (0, 0, 0)
     menu_rect = pygame.Rect((WIDTH - MENU_WIDTH) // 2, (HEIGHT - MENU_HEIGHT) // 2, MENU_WIDTH, MENU_HEIGHT)
@@ -84,10 +84,11 @@ def draw_main_menu(screen):
         {"text": "RESUME", "function": "resume"},
         {"text": "SCOREBOARD", "function": "scoreboard"},
         {"text": "HELP", "function": "help"},
-        {"text": "IMPORT/EXPORT", "function": "import_export"}
+        {"text": "IMPORT/EXPORT", "function": "import_export"},
+        {"text": "QUIT GAME", "function": "quit_game"}  # Add this line
     ]
 
-    button_width, button_height = 225, 50  # Increase button width for "Import/Export"
+    button_width, button_height = 300, 55
     button_margin = 20
     button_start_y = ((HEIGHT - sum([button_height + button_margin for _ in menu_buttons]) - button_margin) // 2) + 20
 
