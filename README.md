@@ -10,15 +10,15 @@ Enjoy this minimalistic chess game!
 
 ## How to Play
 - Utilize the help menu if you do not know the rules of chess (TBA)
-- Press `Resume` to begin the game or to return from the pause screen
+- Press `RESUME` to begin the game or to return from the pause screen
 - Press the `ESC` key to open the menu
 
 ## Features
 - Pull up the main menu with `ESC`
-     - Main menu that has `Resume`, `Scoreboard`, `Help`, and `Import/Export` buttons
+     - Main menu that has `RESUME`, `SCOREBOARD`, `HELP`, and `IMPORT/EXPORT` buttons
         - Help menu - TBA
         - Import/Export functionality - TBA
-- Scoreboard displayed in dark text for both sides, just pull up the menu and press `Scoreboard`
+- Scoreboard displayed in dark text for both sides, just pull up the menu and press `SCOREBOARD`
 - Blue highlighting for selected pieces
 - Undo *any* move using the `u` key
 - Piece logic for all moves except en passant
