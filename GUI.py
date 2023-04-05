@@ -152,16 +152,19 @@ area networks, use internal IP addresses
 for both users.
 
 To find your IP address:
-- Linux (internal / LAN): run "ip route | grep default"
-- Windows (internal / LAN): run "ipconfig /all"
-- External (Linux or Windows): visit ipchicken.com
+- Linux (internal): run "ip route | grep default"
+- Windows (internal): run "ipconfig /all"
+- Mac (internal): run "ifconfig | grep inet"
 
-Enter the IP address below."""
+- External (Linux, Windows, or Mac): visit ipchicken.com
+
+  Enter the IP address below."""
+
     help_lines = help_text.split("\n")
     font = pygame.font.Font(None, 24)
     line_spacing = 5
     total_height = sum([font.size(line)[1] + line_spacing for line in help_lines]) - line_spacing
-    start_y = HEIGHT // 2 - 130 - total_height // 2 + 50  # Change 150 to 130
+    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50  # Keep 110
 
     for i, line in enumerate(help_lines):
         text_surf = font.render(line, True, (0, 0, 0))  # Use 'line' instead of 'help_text'
