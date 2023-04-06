@@ -11,7 +11,10 @@ networking_file_path = "networking.txt"
 if os.path.exists(networking_file_path):
     with open(networking_file_path, "r") as f:
         networking_enabled = f.read()
-        print("Networking enabled (change in HELP menu): " + networking_enabled)
+        if networking_enabled:
+            print("Networking DISABLED (change in HELP menu)")
+        else:
+            print("netowrking ENABLED (change in HELP menu)")
 
 
 # Check if the file exists, and create it if it doesn't
@@ -22,7 +25,10 @@ if not os.path.exists(file_path):
                 print("Networking enabled! But server.txt is blank! Please update it in the help menu, or alter it manually.")
 else:
     with open(file_path, "r") as g:
-        print("Network file detected! IP: " + str(g.read()))
+        network_file_contents = g.read()
+        if network_file_contents == "":
+            network_file_contents = "Empty!"
+        print("Network file detected! IP: " + network_file_contents)
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

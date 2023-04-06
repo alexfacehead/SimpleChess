@@ -48,25 +48,14 @@ class ChessBoard:
     def set_piece(self, x, y, piece):
         self.board[x][y] = piece
 
+    def import_moveset(self, import_text):
+        return False
+
     def move_piece(self, start_x, start_y, dest_x, dest_y):
         piece = self.get_piece(start_x, start_y)
         destination_piece = self.get_piece(dest_x, dest_y)
         if (piece.isupper() and self.turn == 'black') or (piece.islower() and self.turn == 'white'):
             return False
-
-        #is_pawn_promotion = (
-            #piece.lower() == 'p' and
-            #(
-                #((self.turn == 'white' and dest_x == 7 and (start_x == 6 or abs(dest_y - start_y) == 1) and self.get_piece(dest_x, dest_y) != ' ') or
-                #(self.turn == 'black' and dest_x == 0 and (start_x == 1 or abs(dest_y - start_y) == 1) and self.get_piece(dest_x, dest_y) != ' ')) and abs(dest_x - start_x) == 1
-            #)
-        #)
-        #if is_pawn_promotion:
-        #    print("DEBUG: Is pawn promotion? " + str(is_pawn_promotion))
-        #    print("DEBUG: Adding pawn promotion to move_history")
-         #   self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, 0))
-         #   self.turn = 'black' if self.turn == 'white' else 'white'
-         #   return self.do_pawn_promotion(dest_x, dest_y, 1, piece)
 
         is_castle_move = piece.lower() == "k" and abs(dest_y - start_y) > 1
         if not is_castle_move and destination_piece != ' ' and piece.islower() == destination_piece.islower():

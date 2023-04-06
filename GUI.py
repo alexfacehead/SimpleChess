@@ -179,7 +179,7 @@ To find your IP address:
     # Update the text_input_visualizer with the latest events
     text_input_manager.update(events)
 
-# Adjust the position of the textbox
+    # Adjust the position of the textbox
     textbox_width, textbox_height = 400, 50
     textbox_x = (WIDTH - textbox_width) // 2
     textbox_y = HEIGHT // 2 + 50  # Change from HEIGHT // 2 to HEIGHT // 2 + 50
@@ -214,3 +214,61 @@ def draw_textbox(screen):
     pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
     pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
     return textbox_rect
+
+def draw_import_export_menu(screen, text_input_manager, events):
+    menu_buttons = [
+        {"text": "BACK", "function": "back"}
+    ]
+
+    # Draw import text specifications
+    import_text = """Import your properly formatted game import here. 
+Your moves should be comma separated, standard 
+chess formatted moves. (example: 
+e4, e5, Nf3, Nc6, Bb5, a6, Ba4, Nf6, O-O, Be7, 
+Re1, b5, Bb3, d6, c3, O-O, h3, Bb7, d4, Re8)
+
+PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
+
+    import_lines = import_text.split("\n")
+    font = pygame.font.Font(None, 36)
+    line_spacing = 5
+    total_height = sum([font.size(line)[1] + line_spacing for line in import_lines]) - line_spacing
+    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50  # Keep 110
+
+    for i, line in enumerate(import_lines):
+        text_surf = font.render(line, True, (0, 0, 0))  # Use 'line' instead of 'help_text'
+        text_rect = text_surf.get_rect()
+        text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * i)
+        screen.blit(text_surf, text_rect)
+
+    # Create a TextInputVisualizer instance using the text_input_manager
+    text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
+
+    # Update the text_input_visualizer with the latest events
+    text_input_manager.update(events)
+
+    # Adjust the position of the textbox
+    textbox_width, textbox_height = 400, 50
+    textbox_x = (WIDTH - textbox_width) // 2
+    textbox_y = HEIGHT // 2 + 50  # Change from HEIGHT // 2 to HEIGHT // 2 + 50
+    textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
+    pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
+    screen.blit(text_input_visualizer.surface, (textbox_x + 5, textbox_y + 5))  # Use text_input_visualizer.surface
+    pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
+
+    # Adjust the position of the "BACK" button
+    button_width, button_height = 100, 50
+    button_x = (WIDTH - button_width) // 2
+    button_y = HEIGHT // 2 + 120  # Change from HEIGHT // 2 + 100 to HEIGHT // 2 + 120
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    pygame.draw.rect(screen, (255, 255, 255), button_rect)
+    pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
+
+    font = pygame.font.Font(None, 36)
+    text_surf = font.render("BACK", True, (0, 0, 0))
+    text_rect = text_surf.get_rect()
+    text_rect.center = button_rect.center
+    screen.blit(text_surf, text_rect)
+
+    menu_buttons[0]["rect"] = button_rect
+    return menu_buttons, textbox_rect
