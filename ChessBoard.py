@@ -98,7 +98,6 @@ class ChessBoard:
                 self.set_piece(dest_x, dest_y, piece)
                 self.set_piece(start_x, start_y, ' ')
                 self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, destination_piece, score_gain))
-                print("DEBUG: Move history: " + str(self.move_history))
                 if piece_type == "r" and start_x == 0:
                     if start_y == 0:
                         self.queen_rook_moved[self.turn] = True
@@ -135,42 +134,29 @@ class ChessBoard:
         return white_king_count == 1 and black_king_count == 1
 
     def handle_castling_conditions(self, start_x, start_y, dest_x, dest_y):
-        print("DEBUG: Handling castling block entered")
         piece = self.get_piece(start_x, start_y)
         color = 'white' if piece.isupper() else 'black'
 
         if self.king_moved[color] or ((dest_y == 0 and self.queen_rook_moved[color]) or (dest_y == 7 and self.king_rook_moved[color])):
-            print("DEBUG: Returning false from handling castling. self.king_moved[" + str(color) + "]" + "=" + str(self.king_moved[color]))
-            print("DEBUG: self.king_moved[" + str(color) + "]" + "=" + str(self.queen_rook_moved[color]))
-            print("DEBUG: dest_y == 7 = " + str(dest_y == 7) + " and self.king_rook_moved[" + str(color) + "]" + "=" + str(self.king_rook_moved[color]))
             return False
 
         is_short_castling = dest_y == start_y + 3
         is_long_castling = dest_y == start_y - 4
 
         if not (is_short_castling or is_long_castling):
-            print("DEBUG: Returning false from handling castling because not is_short_castling and not is_long_castling")
             return False
 
         if is_short_castling:
             if not self.is_clear_for_castle(start_y, dest_x, dest_y):
-                print("DEBUG: Returning false from handling castling because path is not clear #1")
                 return False
         else:
             if not self.is_clear_for_castle(start_y, dest_x, dest_y):
-                print("DEBUG: Returning false from handling castling because path is not clear #2")
                 return False
 
         if not self.check_if_in_check(start_x, start_y, self.turn):
-            print("DEBUG: Entering final handle_castling block, not in check")
-            print("DEBUG: Rook y: " + str(dest_y))
-            print("DEBUG: King y: " + str(start_y))
             self.perform_castle(start_x, start_y, dest_x, dest_y, is_short_castling)
+            print("DEBUG: Attempting castle")
             self.move_history.append(((start_x, start_y), (dest_x, dest_y), piece, self.get_piece(dest_x, dest_y), 0))
-            print("DEBUG: Castling performed: {} to {}".format(ChessBoard.get_pos(start_x, start_y), ChessBoard.get_pos(dest_x, dest_y)))
-            print("Current list of move history: " + str(self.move_history))
-            print("Current score: " + str(self.get_score()))
-            #self.turn = 'black' if self.turn == 'white' else 'white'
             return True
         return False
     
@@ -178,12 +164,10 @@ class ChessBoard:
         return self.get_piece(x, y) == ' '
 
     def is_clear_for_castle(self, start_y, dest_x, dest_y):
-        print("DEBUG: Checking if path is clear for castle")
         step = 1 if start_y < dest_y else -1
         for y in range(start_y + step, dest_y, step):
             if not self.is_space_empty(dest_x, y):
                 return False
-        print("DEBUG: Path is clear!")
         return True
 
     def check_if_in_check(self, king_x, king_y, turn):
@@ -208,7 +192,6 @@ class ChessBoard:
         return False
 
     def perform_castle(self, king_x, king_y, rook_x, rook_y, is_short_castling):
-        print("DEBUG: Performing the castling (set_piece attempt is to follow)")
         king_destination_y = king_y + 2 if is_short_castling else king_y - 2
         self.set_piece(king_x, king_destination_y, self.get_piece(king_x, king_y))
         self.set_piece(king_x, king_y, ' ')
@@ -224,14 +207,11 @@ class ChessBoard:
             else:
                 self.king_rook_moved['white'] = True
         elif self.get_piece(king_x, king_destination_y).islower():
-            print("DEBUG: Setting king_moved['black'] to True #1")
             self.king_moved['black'] = True
             if rook_y < king_y:
                 self.queen_rook_moved['black'] = True
             else:
-                print("DEBUG: Setting king_moved['black'] to True #2")
                 self.king_rook_moved['black'] = True
-        print("End of perform castle")
 
     def undo_move(self, is_recursive):
         if not self.move_history or self.move_history == "":

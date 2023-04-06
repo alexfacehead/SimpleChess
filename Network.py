@@ -6,7 +6,7 @@ import time
 networking_enabled = False
 server_data = ""
 file_path = "server.txt"
-
+neworking_enabled = False
 networking_file_path = "networking.txt"
 if os.path.exists(networking_file_path):
     with open(networking_file_path, "r") as f:

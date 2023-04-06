@@ -7,8 +7,9 @@ import os
 import ipaddress
 import sys
 import pyperclip
+import re
 
-def decode_import(valid_import):
+def decode_import_old(valid_import):
     def convert_coordinate(coordinate):
         col = ord(coordinate[0]) - ord('a')
         row = 8 - int(coordinate[1])  # Reverse the row index calculation
@@ -26,7 +27,6 @@ def decode_import(valid_import):
             dest = convert_coordinate(moves[i + 1])
             decoded_moves.append((start[0], start[1], dest[0], dest[1]))
     else:
-        import re
         space_delimited_moves = re.compile(r"^([KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?[ ])+[KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?$")
         if space_delimited_moves.match(valid_import):
             moves = valid_import.split(" ")
@@ -59,15 +59,14 @@ def save_moves_to_file(formatted_moves, filename="import.txt"):
         for move in formatted_moves:
             file.write(f"{move[0]} {move[1]} {move[2]} {move[3]}\n")
 
-# Determines whether a human-readable input string is valid
 def is_valid_import(import_string):
     if import_string == "":
         print("DEBUG: Import string empty!")
         return False
-    import re
+
     # Regular expression patterns for both formats
     move_pattern_old = re.compile(
-        r"^(?P<piece>[KQRBN]?)(?P<col>[a-h]?)(?P<row>[1-8]?)(?P<capture>x?)(?P<dest_col>[a-h])(?P<dest_row>[1-8])(?P<promotion>=[QRBN])?(?P<check>[+#]?)$"
+        r"^(?P<piece>[KQRBN]?)(?P<col>[a-hA-H]?)(?P<row>[1-8]?)(?P<capture>x?)(?P<dest_col>[a-hA-H])(?P<dest_row>[1-8])(?P<promotion>=[QRBN])?(?P<check>[+#]?)$"
     )
     move_pattern_new = re.compile(
         r"^(?P<start_y>[0-7])\s(?P<start_x>[0-7])\s(?P<dest_y>[0-7])\s(?P<dest_x>[0-7])$"
@@ -77,22 +76,57 @@ def is_valid_import(import_string):
     import_string = import_string.strip()
 
     # Check for space-delimited input string
-    space_delimited_moves = re.compile(r"^([KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?[ ])+[KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?$")
+    space_delimited_moves = re.compile(r"^([KQRBNkqrbn]?[a-hA-H][1-8](?:=[QRBNqrbn])?[+#]?[ ])+[KQRBNkqrbn]?[a-hA-H][1-8](?:=[QRBNqrbn])?[+#]?$")
 
     if space_delimited_moves.match(import_string):
         delimiter = " "
     else:
         delimiter = ", " if "," in import_string else "\n"
-    
+
     moves = import_string.split(delimiter)
-    
+
     # Check if each move in the import_string is valid
     for move in moves:
         if not move_pattern_old.match(move) and not move_pattern_new.match(move):
-            print("DEBUG: String not empty, but malformed! (" + str(import_string) + ")")
+            if import_string != "Empty!":
+                print("DEBUG: String not empty, but malformed! (" + str(import_string) + ")")
             return False
 
     return True
+
+
+def decode_import(valid_import):
+    def convert_coordinate(coordinate):
+        col = ord(coordinate[0].lower()) - ord('a')
+        row = 8 - int(coordinate[1])  # Reverse the row index calculation
+        return row, col
+
+    # Determine the format and split the valid_import into individual moves
+    delimiter = ", " if "," in valid_import else "\n"
+    moves = valid_import.strip().split(delimiter)
+
+    decoded_moves = []
+
+    if delimiter == ", ":
+        for i in range(0, len(moves), 2):
+            start = convert_coordinate(moves[i])
+            dest = convert_coordinate(moves[i + 1])
+            decoded_moves.append((start[0], start[1], dest[0], dest[1]))
+    else:
+        space_delimited_moves = re.compile(r"^([KQRBNkqrbn]?[a-hA-H][1-8](?:=[QRBNqrbn])?[+#]?[ ])+[KQRBNkqrbn]?[a-hA-H][1-8](?:=[QRBNqrbn])?[+#]?$")
+        if space_delimited_moves.match(valid_import):
+            moves = valid_import.split(" ")
+            for i in range(0, len(moves), 2):
+                start = convert_coordinate(moves[i])
+                dest = convert_coordinate(moves[i + 1])
+                decoded_moves.append((start[0], start[1], dest[0], dest[1]))
+        else:
+            for move in moves:
+                if move:  # Filter out empty moves
+                    start_y, start_x, dest_y, dest_x = map(int, move.split())
+                    decoded_moves.append((start_x, start_y, dest_x, dest_y))
+
+    return decoded_moves  # Add this line at the end
 
 def copy_to_clipboard(text):
     pyperclip.copy(text)
@@ -104,6 +138,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Chess")
     load_images()
+    file_path_two = "import.txt"
 
     def show_alert_message(message, width, height):
         # Create a surface for the alert
@@ -127,27 +162,28 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     return
-
-
+                
     network = Network()
     chess_board = ChessBoard()
     #chess_board.move_piece(1, 0, 2, 0)
     #chess_board.move_piece(6, 0, 5, 0)
-    file_path_import = "import.txt"
-    if os.path.exists(file_path_import):
-        with open(file_path_import, "r") as f:
+    if os.path.exists(file_path_two):
+        with open(file_path_two, "r") as f:
             contents = f.read()
             if contents == "":
                 contents = "Empty!"
-            print("Import file detected! Contents: " + contents)
+            print("Import file detected. Contents: " + contents)
             if is_valid_import(contents):
                 print("DEBUG: Is valid!")
                 decoded_moves = decode_import(contents)
                 print("DEBUG: decoded_moves = " + str(decoded_moves))
                 for move in decoded_moves:
                     chess_board.move_piece(*move)
-
-
+    else:
+        print("import.txt does not exist!")
+        with open(file_path_two, "w") as f:
+            print("DEBUG: import.txt does not exist. Creating now.")
+            f.write("")
 
     game_state = "menu"  # Add a state variable for the game
     menu_buttons = []
@@ -292,15 +328,18 @@ def main():
             menu_buttons, textbox_rect = draw_help_menu(screen, text_input_visualizer_help, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_help = text_input_manager_help.value  # Get the input from the text_input_manager
-                print("DEBUG: input_text_help value: " + str(input_text_help))
+                if input_text_help != "":
+                    print("DEBUG: input_text_help value: " + str(input_text_help))
                 file_path_one = "server.txt"
 
                 if not os.path.exists(file_path_one):
+                    print("server.txt does exist! Do you want to play online?")
                     with open(file_path_one, "w") as f:
+                        f.write("")
                         pass  # You can write some initial content here if you want, or just leave it empty
                 with open("server.txt", "r") as f:
                     if not is_valid_ip(f.read()):
-                        print("Invalid or empty IP!")
+                        print("Updating empty IP file with " + input_text_help)
                         with open("server.txt", "w") as f:
                             f.write(input_text_help)  # Update the server.txt file with the input
                 # Update the server_data variable in Network.py
@@ -310,22 +349,18 @@ def main():
         elif game_state == "import":
             draw_transparent_background(screen)
             draw_scoreboard_background(screen, 700, 450)
+
             menu_buttons, textbox_rect = draw_import_export_menu(screen, text_input_visualizer_import, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_import = text_input_manager_import.value  # Get the input from the text_input_manager
-                file_path_two = "import.txt"
 
-                if not os.path.exists(file_path_two):
-                    with open(file_path_two, "w") as f:
-                        pass  # You can write some initial content here if you want, or just leave it empty
-                with open("import.txt", "r") as f:
+                with open(file_path_two, "r") as f:
                     if f.read() == "" or input_text_import != "":
                         with open("import.txt", "w") as f:
                             f.write(input_text_import)  # Update the server.txt file with the input
                     if input_text_import != "" and is_valid_import(input_text_import):
-                            print("DEBUG: Is valid!")
+                            print("DEBUG: Import is valid. Attempting to setup board.")
                             decoded_moves = decode_import(input_text_import)
-                            print("DEBUG: decoded_moves = " + str(decoded_moves))
                             for move in decoded_moves:
                                 chess_board.move_piece(*move)
                 
