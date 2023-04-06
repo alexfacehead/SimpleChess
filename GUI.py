@@ -215,8 +215,10 @@ def draw_textbox(screen):
     pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
     return textbox_rect
 
+
 def draw_import_export_menu(screen, text_input_manager, events):
     menu_buttons = [
+        {"text": "EXPORT", "function": "export"},
         {"text": "BACK", "function": "back"}
     ]
 
@@ -256,10 +258,26 @@ PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
     screen.blit(text_input_visualizer.surface, (textbox_x + 5, textbox_y + 5))  # Use text_input_visualizer.surface
     pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
 
+        # Adjust the position of the "EXPORT" button
+    button_width, button_height = 120, 50
+    button_x = (WIDTH - button_width) // 2 - 60
+    button_y = HEIGHT // 2 + 120
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    pygame.draw.rect(screen, (255, 255, 255), button_rect)
+    pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
+
+    font = pygame.font.Font(None, 36)
+    text_surf = font.render("EXPORT", True, (0, 0, 0))
+    text_rect = text_surf.get_rect()
+    text_rect.center = button_rect.center
+    screen.blit(text_surf, text_rect)
+
+    menu_buttons[0]["rect"] = button_rect
+
     # Adjust the position of the "BACK" button
     button_width, button_height = 100, 50
-    button_x = (WIDTH - button_width) // 2
-    button_y = HEIGHT // 2 + 120  # Change from HEIGHT // 2 + 100 to HEIGHT // 2 + 120
+    button_x = (WIDTH - button_width) // 2 + 60
+    button_y = HEIGHT // 2 + 120
     button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
     pygame.draw.rect(screen, (255, 255, 255), button_rect)
     pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
@@ -270,5 +288,6 @@ PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
     text_rect.center = button_rect.center
     screen.blit(text_surf, text_rect)
 
-    menu_buttons[0]["rect"] = button_rect
+    menu_buttons[1]["rect"] = button_rect
+
     return menu_buttons, textbox_rect

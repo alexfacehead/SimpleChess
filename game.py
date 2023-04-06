@@ -8,55 +8,67 @@ import ipaddress
 import sys
 
 def decode_import(valid_import):
-    import re
+    def convert_coordinate(coordinate):
+        col = ord(coordinate[0]) - ord('a')
+        row = 8 - int(coordinate[1])  # Reverse the row index calculation
+        return row, col
 
-    # Function to convert algebraic notation to row and column
-    def algebraic_to_coord(move):
-        col_map = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4, 'f': 5, 'g': 6, 'h': 7}
-        return 8 - int(move[1]), col_map[move[0]]
-
-    # Regular expression pattern for a standard chess move
-    move_pattern = re.compile(
-        r"^(?P<piece>[KQRBN]?)(?P<col>[a-h]?)(?P<row>[1-8]?)(?P<capture>x?)(?P<dest_col>[a-h])(?P<dest_row>[1-8])(?P<promotion>=[QRBN])?(?P<check>[+#]?)$"
-    )
-
-    # Split the valid_import into individual moves
-    moves = valid_import.split(', ')
+    # Determine the format and split the valid_import into individual moves
+    delimiter = ", " if "," in valid_import else "\n"
+    moves = valid_import.strip().split(delimiter)
 
     decoded_moves = []
-
-    for move in moves:
-        match = move_pattern.match(move)
-        if match:
-            piece = match.group('piece')
-            start_col = match.group('col')
-            start_row = match.group('row')
-            dest_col = match.group('dest_col')
-            dest_row = match.group('dest_row')
-
-            # If the start_col and start_row are not specified, set them to the destination coordinates
-            start_coord = (algebraic_to_coord(start_col + start_row) if start_row and start_col else algebraic_to_coord(dest_col + dest_row))
-            dest_coord = algebraic_to_coord(dest_col + dest_row)
-
-            decoded_moves.append((piece, start_coord, dest_coord))
+    if delimiter == ", ":
+        for i in range(0, len(moves), 2):
+            start = convert_coordinate(moves[i])
+            dest = convert_coordinate(moves[i + 1])
+            decoded_moves.append((start[0], start[1], dest[0], dest[1]))
+    else:
+        for move in moves:
+            if move:  # Filter out empty moves
+                start_y, start_x, dest_y, dest_x = map(int, move.split())
+                decoded_moves.append((start_x, start_y, dest_x, dest_y))
 
     return decoded_moves
+
+def export_move_history(move_history):
+    formatted_moves = []
+
+    for move in move_history:
+        start_x, start_y = move[0]
+        dest_x, dest_y = move[1]
+        formatted_moves.append((start_y, start_x, dest_y, dest_x))
+
+    return formatted_moves
+
+def save_moves_to_file(formatted_moves, filename="import.txt"):
+    with open(filename, "w") as file:
+        for move in formatted_moves:
+            file.write(f"{move[0]} {move[1]} {move[2]} {move[3]}\n")
 
 def is_valid_import(import_string):
     if import_string == "":
         print("DEBUG: String empty!")
         return False
     import re
-    # Regular expression pattern for a standard chess move
-    move_pattern = re.compile(
+    # Regular expression patterns for both formats
+    move_pattern_old = re.compile(
         r"^(?P<piece>[KQRBN]?)(?P<col>[a-h]?)(?P<row>[1-8]?)(?P<capture>x?)(?P<dest_col>[a-h])(?P<dest_row>[1-8])(?P<promotion>=[QRBN])?(?P<check>[+#]?)$"
     )
+    move_pattern_new = re.compile(
+        r"^(?P<start_y>[0-7])\s(?P<start_x>[0-7])\s(?P<dest_y>[0-7])\s(?P<dest_x>[0-7])$"
+    )
 
-    # Split the import_string into individual moves
-    moves = import_string.split(", ")
+    # Strip the trailing newline character
+    import_string = import_string.strip()
+
+    # Determine the format and split the import_string into individual moves
+    delimiter = ", " if "," in import_string else "\n"
+    moves = import_string.split(delimiter)
+
     # Check if each move in the import_string is valid
     for move in moves:
-        if not move_pattern.match(move):
+        if not move_pattern_old.match(move) and not move_pattern_new.match(move):
             print("DEBUG: String not empty, but malformed! (" + str(import_string) + ")")
             return False
 
@@ -93,6 +105,8 @@ def main():
 
     network = Network()
     chess_board = ChessBoard()
+    #chess_board.move_piece(1, 0, 2, 0)
+    #chess_board.move_piece(6, 0, 5, 0)
     file_path_import = "import.txt"
     if os.path.exists(file_path_import):
         with open(file_path_import, "r") as f:
@@ -100,6 +114,13 @@ def main():
             if contents == "":
                 contents = "Empty!"
             print("Import file detected! Contents: " + contents)
+            if is_valid_import(contents):
+                print("DEBUG: Is valid!")
+                decoded_moves = decode_import(contents)
+                print("DEBUG: decoded_moves = " + str(decoded_moves))
+                for move in decoded_moves:
+                    chess_board.move_piece(*move)
+
 
 
     game_state = "menu"  # Add a state variable for the game
@@ -127,10 +148,13 @@ def main():
                     elif button["function"] == "quit_game":  # Add this condition
                         pygame.quit()
                         sys.exit()
+                    elif button["function"] == "export":  # Add this condition
+                        formatted_moves = export_move_history(chess_board.move_history)
+                        save_moves_to_file(formatted_moves)
             return game_state
 
-    def draw_scoreboard_background(screen):
-        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 400, 200
+    def draw_scoreboard_background(screen, BACKGROUND_WIDTH, BACKGROUND_HEIGHT):
+        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = BACKGROUND_WIDTH, BACKGROUND_HEIGHT
         BACKGROUND_COLOR = (153, 102, 51)
         BACKGROUND_BORDER_COLOR = (0, 0, 0)
         background_rect = pygame.Rect((WIDTH - BACKGROUND_WIDTH) // 2, (HEIGHT - BACKGROUND_HEIGHT) // 2, BACKGROUND_WIDTH, BACKGROUND_HEIGHT)
@@ -145,15 +169,7 @@ def main():
             return True
         except ValueError:
             return False
-
-    def draw_menu_background(screen):
-        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = 700, 500  # Increase width to 700 and height to 500
-        BACKGROUND_COLOR = (153, 102, 51)
-        BACKGROUND_BORDER_COLOR = (0, 0, 0)
-        background_rect = pygame.Rect((WIDTH - BACKGROUND_WIDTH) // 2, (HEIGHT - BACKGROUND_HEIGHT) // 2, BACKGROUND_WIDTH, BACKGROUND_HEIGHT)
-        pygame.draw.rect(screen, BACKGROUND_COLOR, background_rect)
-        pygame.draw.rect(screen, BACKGROUND_BORDER_COLOR, background_rect, 5)
-
+        
     running = True
     selected_piece = None
     textbox_rect = None
@@ -191,8 +207,15 @@ def main():
                     file_path = "import.txt"
                     if os.path.exists(file_path):
                         show_alert_message("IMPORT FILE CLEARED! \n(press ESC to exit)", 300, 100)
-                        with open(file_path, "w") as f:
-                            f.write("")
+                        contents = ""
+                        with open(file_path, "r") as g:
+                            contents  = g.read()
+                        if contents != "":
+                            with open(file_path, "w") as f:
+                                f.write("")
+                                undo_valid = chess_board.undo_move(False)
+                                while chess_board is not None and undo_valid:
+                                    undo_valid = chess_board.undo_move(False)
             if event.type == pygame.QUIT:
                 running = False
 
@@ -223,7 +246,7 @@ def main():
             draw_board(screen, chess_board, selected_piece)
         elif game_state == "scoreboard":
             draw_transparent_background(screen)
-            draw_scoreboard_background(screen)  # Add this line
+            draw_scoreboard_background(screen, 400, 200)  # Add this line
             draw_scoreboard(screen, chess_board)
         elif game_state == "menu":
             draw_transparent_background(screen)
@@ -239,7 +262,7 @@ def main():
                         show_alert_message("IP FILE EMPTY! \n EDIT IN HELP MENU! \n(press ESC to exit)", 300, 100)
         elif game_state == "help":
             draw_transparent_background(screen)
-            draw_menu_background(screen)
+            draw_scoreboard_background(screen, 600, 500)
             menu_buttons, textbox_rect = draw_help_menu(screen, text_input_visualizer_help, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_help = text_input_manager_help.value  # Get the input from the text_input_manager
@@ -260,7 +283,7 @@ def main():
                 text_input_manager_help.clear_text()  # Clear the input after updating the file
         elif game_state == "import":
             draw_transparent_background(screen)
-            draw_menu_background(screen)
+            draw_scoreboard_background(screen, 700, 400)
             menu_buttons, textbox_rect = draw_import_export_menu(screen, text_input_visualizer_import, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_import = text_input_manager_import.value  # Get the input from the text_input_manager
@@ -273,14 +296,12 @@ def main():
                     if f.read() == "" or input_text_import != "":
                         with open("import.txt", "w") as f:
                             f.write(input_text_import)  # Update the server.txt file with the input
-                print("DEBUG: Is valid input?: " + str(is_valid_import(input_text_import)))
-                if input_text_import != "" and is_valid_import(input_text_import):
-                    decoded_moves = decode_import(input_text_import)
-                    for move in decoded_moves:
-                        piece, start_coord, dest_coord = move
-                        start_x, start_y = start_coord
-                        dest_x, dest_y = dest_coord
-                        chess_board.move_piece(start_x, start_y, dest_x, dest_y)
+                    if input_text_import != "" and is_valid_import(input_text_import):
+                            print("DEBUG: Is valid!")
+                            decoded_moves = decode_import(input_text_import)
+                            print("DEBUG: decoded_moves = " + str(decoded_moves))
+                            for move in decoded_moves:
+                                chess_board.move_piece(*move)
                 
                 # Update the server_data variable in Network.py
                 Network.server_data = input_text_import

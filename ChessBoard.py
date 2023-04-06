@@ -113,6 +113,27 @@ class ChessBoard:
                 return True
         return False
 
+    def get_history(self):
+        return str(self.move_history)
+
+    def is_valid(self):
+        """
+        Check if the current board state is valid.
+        For simplicity, this function will only check if there is exactly one king for each side.
+        """
+        white_king_count = 0
+        black_king_count = 0
+
+        for row in range(8):
+            for col in range(8):
+                piece = self.get_piece(row, col)
+                if piece == 'K':
+                    white_king_count += 1
+                elif piece == 'k':
+                    black_king_count += 1
+
+        return white_king_count == 1 and black_king_count == 1
+
     def handle_castling_conditions(self, start_x, start_y, dest_x, dest_y):
         print("DEBUG: Handling castling block entered")
         piece = self.get_piece(start_x, start_y)
@@ -213,8 +234,8 @@ class ChessBoard:
         print("End of perform castle")
 
     def undo_move(self, is_recursive):
-        print("Attempting undo")
-        if not self.move_history:
+        if not self.move_history or self.move_history == "":
+            print("DEBUG: Attempt undo failed")
             return False
 
         last_move = self.move_history.pop()
