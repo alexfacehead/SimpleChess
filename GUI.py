@@ -223,13 +223,14 @@ def draw_import_export_menu(screen, text_input_manager, events):
     ]
 
     # Draw import text specifications
-    import_text = """Import your properly formatted game import here. 
+    import_text = """
+    Import your properly formatted game import here. 
 Your moves should be comma separated, standard 
 chess formatted moves. (example: 
-e4, e5, Nf3, Nc6, Bb5, a6, Ba4, Nf6, O-O, Be7, 
-Re1, b5, Bb3, d6, c3, O-O, h3, Bb7, d4, Re8)
-
-PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
+a7, a6, a2, a3, c7, c6, c2, c3, d7,
+d6, d2, d3, c6, d7, c1, d2, c3, c4, c8, 
+d7, a6, c4, a1, c3, d6, d7, d1, d2, e7, 
+a7, e7, a7, e1, a1, e1, a1"""
 
     import_lines = import_text.split("\n")
     font = pygame.font.Font(None, 36)
@@ -243,6 +244,15 @@ PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
         text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * i)
         screen.blit(text_surf, text_rect)
 
+    # Draw the bold bottom-most text
+    bold_text = "PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"
+    bold_font = pygame.font.Font(None, 36)
+    bold_font.set_bold(True)
+    bold_text_surf = bold_font.render(bold_text, True, (0, 0, 0))
+    bold_text_rect = bold_text_surf.get_rect()
+    bold_text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * len(import_lines))
+    screen.blit(bold_text_surf, bold_text_rect)
+
     # Create a TextInputVisualizer instance using the text_input_manager
     text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
 
@@ -252,16 +262,16 @@ PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
     # Adjust the position of the textbox
     textbox_width, textbox_height = 400, 50
     textbox_x = (WIDTH - textbox_width) // 2
-    textbox_y = HEIGHT // 2 + 50  # Change from HEIGHT // 2 to HEIGHT // 2 + 50
+    textbox_y = HEIGHT // 2 + 80  # Change from HEIGHT // 2 to HEIGHT // 2 + 50
     textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
     pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
     screen.blit(text_input_visualizer.surface, (textbox_x + 5, textbox_y + 5))  # Use text_input_visualizer.surface
     pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
 
-        # Adjust the position of the "EXPORT" button
+    # Adjust the position of the "EXPORT" button
     button_width, button_height = 120, 50
     button_x = (WIDTH - button_width) // 2 - 60
-    button_y = HEIGHT // 2 + 120
+    button_y = HEIGHT // 2 + 140
     button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
     pygame.draw.rect(screen, (255, 255, 255), button_rect)
     pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)
@@ -277,7 +287,7 @@ PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"""
     # Adjust the position of the "BACK" button
     button_width, button_height = 100, 50
     button_x = (WIDTH - button_width) // 2 + 60
-    button_y = HEIGHT // 2 + 120
+    button_y = HEIGHT // 2 + 140
     button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
     pygame.draw.rect(screen, (255, 255, 255), button_rect)
     pygame.draw.rect(screen, (0, 0, 0), button_rect, 2)

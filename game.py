@@ -6,6 +6,7 @@ from pygame_textinput.pygame_textinput import TextInputManager, TextInputVisuali
 import os
 import ipaddress
 import sys
+import pyperclip
 
 def decode_import(valid_import):
     def convert_coordinate(coordinate):
@@ -18,19 +19,30 @@ def decode_import(valid_import):
     moves = valid_import.strip().split(delimiter)
 
     decoded_moves = []
+
     if delimiter == ", ":
         for i in range(0, len(moves), 2):
             start = convert_coordinate(moves[i])
             dest = convert_coordinate(moves[i + 1])
             decoded_moves.append((start[0], start[1], dest[0], dest[1]))
     else:
-        for move in moves:
-            if move:  # Filter out empty moves
-                start_y, start_x, dest_y, dest_x = map(int, move.split())
-                decoded_moves.append((start_x, start_y, dest_x, dest_y))
+        import re
+        space_delimited_moves = re.compile(r"^([KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?[ ])+[KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?$")
+        if space_delimited_moves.match(valid_import):
+            moves = valid_import.split(" ")
+            for i in range(0, len(moves), 2):
+                start = convert_coordinate(moves[i])
+                dest = convert_coordinate(moves[i + 1])
+                decoded_moves.append((start[0], start[1], dest[0], dest[1]))
+        else:
+            for move in moves:
+                if move:  # Filter out empty moves
+                    start_y, start_x, dest_y, dest_x = map(int, move.split())
+                    decoded_moves.append((start_x, start_y, dest_x, dest_y))
 
     return decoded_moves
 
+# Exports the current game move history to a usable format
 def export_move_history(move_history):
     formatted_moves = []
 
@@ -41,14 +53,16 @@ def export_move_history(move_history):
 
     return formatted_moves
 
+# Handles saving a formatted move string to import.txt
 def save_moves_to_file(formatted_moves, filename="import.txt"):
     with open(filename, "w") as file:
         for move in formatted_moves:
             file.write(f"{move[0]} {move[1]} {move[2]} {move[3]}\n")
 
+# Determines whether a human-readable input string is valid
 def is_valid_import(import_string):
     if import_string == "":
-        print("DEBUG: String empty!")
+        print("DEBUG: Import string empty!")
         return False
     import re
     # Regular expression patterns for both formats
@@ -62,10 +76,16 @@ def is_valid_import(import_string):
     # Strip the trailing newline character
     import_string = import_string.strip()
 
-    # Determine the format and split the import_string into individual moves
-    delimiter = ", " if "," in import_string else "\n"
-    moves = import_string.split(delimiter)
+    # Check for space-delimited input string
+    space_delimited_moves = re.compile(r"^([KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?[ ])+[KQRBN]?[a-h][1-8](?:=[QRBN])?[+#]?$")
 
+    if space_delimited_moves.match(import_string):
+        delimiter = " "
+    else:
+        delimiter = ", " if "," in import_string else "\n"
+    
+    moves = import_string.split(delimiter)
+    
     # Check if each move in the import_string is valid
     for move in moves:
         if not move_pattern_old.match(move) and not move_pattern_new.match(move):
@@ -73,6 +93,12 @@ def is_valid_import(import_string):
             return False
 
     return True
+
+def copy_to_clipboard(text):
+    pyperclip.copy(text)
+
+def paste_from_clipboard():
+    return pyperclip.paste()
 
 def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -283,7 +309,7 @@ def main():
                 text_input_manager_help.clear_text()  # Clear the input after updating the file
         elif game_state == "import":
             draw_transparent_background(screen)
-            draw_scoreboard_background(screen, 700, 400)
+            draw_scoreboard_background(screen, 700, 450)
             menu_buttons, textbox_rect = draw_import_export_menu(screen, text_input_visualizer_import, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_import = text_input_manager_import.value  # Get the input from the text_input_manager
