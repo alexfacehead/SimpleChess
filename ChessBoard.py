@@ -3,7 +3,10 @@ class ChessBoard:
         self.piece_values = {'p': 1, 'r': 5, 'n': 3, 'b': 3, 'q': 9, 'k': 0}
         self.score = {'white': 0, 'black': 0}
         self.turn = 'white'
-
+        
+        self.did_undo_swap = False
+        self.castle_move_undone = False
+        self.is_castle_undo = False
         self.move_history = []
         self.board = [[' ' for _ in range(8)] for _ in range(8)]
         self.initialize_board()
@@ -214,7 +217,10 @@ class ChessBoard:
                 self.king_rook_moved['black'] = True
 
     def undo_move(self, is_recursive):
-        if not self.move_history or self.move_history == "":
+        if self.is_castle_undo:
+            self.is_castle_undo = False
+            return False
+        elif not self.move_history or self.move_history == "":
             print("DEBUG: Attempt undo failed")
             return False
 
@@ -222,8 +228,8 @@ class ChessBoard:
         (start_x, start_y), (dest_x, dest_y), moved_piece, destination_piece, score_change = last_move
 
         is_castle_move = moved_piece.lower() == "k" and abs(dest_y - start_y) > 1
-
-        if is_castle_move:
+        if is_castle_move and not self.is_castle_undo:
+            print("Is castle move")
             # Determine if it was a short or long castling
             is_short_castling = dest_y > start_y
 
@@ -264,11 +270,14 @@ class ChessBoard:
 
         if not self.move_history and not is_recursive:
             print("No move history")
-            self.turn = 'black' if self.turn == 'white' else 'white'
-            self.undo_move(True)
+            #self.undo_move(True)
             return True
-        self.turn = 'black' if self.turn == 'white' else 'white'
 
+        # Change turn only if it's not a castle move or it's a recursive call
+        if not is_castle_move or is_recursive:
+            self.turn = 'white' if self.turn == 'white' else 'black'
+        if is_castle_move:
+            self.is_castle_undo = True
         return True
 
     def print_board(self):

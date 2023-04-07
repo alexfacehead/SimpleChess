@@ -165,14 +165,12 @@ def main():
                 
     network = Network()
     chess_board = ChessBoard()
-    #chess_board.move_piece(1, 0, 2, 0)
-    #chess_board.move_piece(6, 0, 5, 0)
     if os.path.exists(file_path_two):
         with open(file_path_two, "r") as f:
             contents = f.read()
             if contents == "":
                 contents = "Empty!"
-            print("Import file detected. Contents: " + contents)
+            print("Import file detected. Contents: ") #+ format_move_history(contents))
             if is_valid_import(contents):
                 print("DEBUG: Is valid!")
                 decoded_moves = decode_import(contents)
@@ -328,8 +326,6 @@ def main():
             menu_buttons, textbox_rect = draw_help_menu(screen, text_input_visualizer_help, events)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 input_text_help = text_input_manager_help.value  # Get the input from the text_input_manager
-                if input_text_help != "":
-                    print("DEBUG: input_text_help value: " + str(input_text_help))
                 file_path_one = "server.txt"
 
                 if not os.path.exists(file_path_one):
@@ -338,7 +334,7 @@ def main():
                         f.write("")
                         pass  # You can write some initial content here if you want, or just leave it empty
                 with open("server.txt", "r") as f:
-                    if not is_valid_ip(f.read()):
+                    if not is_valid_ip(f.read()) or is_valid_ip(input_text_help):
                         print("Updating empty IP file with " + input_text_help)
                         with open("server.txt", "w") as f:
                             f.write(input_text_help)  # Update the server.txt file with the input
