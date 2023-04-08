@@ -158,7 +158,8 @@ To find your IP address:
 
 - External (Linux, Windows, or Mac): visit ipchicken.com
 
-  Enter the IP address below, then press ENTER."""
+  Enter the IP address below, then press ENTER
+."""
 
     help_lines = help_text.split("\n")
     font = pygame.font.Font(None, 28)
