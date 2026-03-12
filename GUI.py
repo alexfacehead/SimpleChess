@@ -19,7 +19,7 @@ pygame.init()
 # Load and resize images
 def load_image(file_name):
     image = pygame.image.load(file_name)
-    return pygame.transform.scale(image, (SQUARE_SIZE, SQUARE_SIZE))
+    return pygame.transform.smoothscale(image.convert_alpha(), (SQUARE_SIZE, SQUARE_SIZE))
 
 def load_images():
     global pieces

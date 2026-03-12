@@ -32,12 +32,12 @@ class ChessBoard:
         pieces = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 
         for i, piece in enumerate(pieces):
-            self.board[0][i] = piece
-            self.board[7][i] = piece.lower()
+            self.board[0][i] = piece.lower()
+            self.board[7][i] = piece
 
         for i in range(8):
-            self.board[1][i] = 'P'
-            self.board[6][i] = 'p'
+            self.board[1][i] = 'p'
+            self.board[6][i] = 'P'
 
     def get_piece(self, x, y):
         return self.board[x][y]
@@ -112,7 +112,7 @@ class ChessBoard:
 
         # Handle pawn promotion
         if piece_type == 'p':
-            if (piece.isupper() and dest_x == 7) or (piece.islower() and dest_x == 0):
+            if (piece.isupper() and dest_x == 0) or (piece.islower() and dest_x == 7):
                 self.do_pawn_promotion(dest_x, dest_y, piece)
 
         # Track en passant eligibility: pawn moved 2 squares
@@ -129,7 +129,7 @@ class ChessBoard:
         if piece_type == "k":
             self.king_moved[color] = True
         elif piece_type == "r":
-            home_row = 0 if color == 'white' else 7
+            home_row = 7 if color == 'white' else 0
             if start_x == home_row:
                 if start_y == 0:
                     self.queen_rook_moved[color] = True
@@ -212,7 +212,7 @@ class ChessBoard:
                     piece_type = piece.lower()
                     if piece_type == 'p':
                         # Pawns attack diagonally — check manually to avoid move-vs-capture confusion
-                        direction = 1 if piece.isupper() else -1
+                        direction = -1 if piece.isupper() else 1
                         if x + direction == king_x and abs(y - king_y) == 1:
                             return True
                     else:
@@ -357,12 +357,12 @@ class ChessBoard:
         self.set_piece(dest_x, dest_y, converted_piece)
     
     def is_pawn_starting_position(self, x, is_white):
-        return (x == 1 and is_white) or (x == 6 and not is_white)
+        return (x == 6 and is_white) or (x == 1 and not is_white)
 
     def valid_pawn_move(self, start_x, start_y, dest_x, dest_y):
         piece = self.get_piece(start_x, start_y)
         is_white = piece.isupper()
-        direction = 1 if is_white else -1
+        direction = -1 if is_white else 1
         dest_piece = self.get_piece(dest_x, dest_y)
 
         # Must move exactly one rank forward (or two from start)

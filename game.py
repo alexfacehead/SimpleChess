@@ -133,7 +133,8 @@ def main():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                     return
                 
-    network = Network()
+    from Network import networking_enabled
+    network = Network() if networking_enabled else None
     chess_board = ChessBoard()
     if os.path.exists(file_path_two):
         with open(file_path_two, "r") as f:
@@ -265,9 +266,10 @@ def main():
                         else:
                             move_successful = chess_board.move_piece(selected_piece[0], selected_piece[1], row, col)
                             if move_successful:
-                                updated_board = network.send((selected_piece[0], selected_piece[1], row, col))
-                                if updated_board is not None:
-                                    chess_board = updated_board
+                                if network is not None:
+                                    updated_board = network.send((selected_piece[0], selected_piece[1], row, col))
+                                    if updated_board is not None:
+                                        chess_board = updated_board
                                 selected_piece = None
                             elif piece != ' ':
                                 selected_piece = (row, col)
