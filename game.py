@@ -1,6 +1,6 @@
 import pygame
 from ChessBoard import ChessBoard
-from GUI import draw_board, draw_help_menu, draw_import_export_menu, draw_menu, draw_transparent_background, draw_scoreboard, load_images, SQUARE_SIZE, WIDTH, HEIGHT
+from GUI import draw_board, draw_game_status, draw_help_menu, draw_import_export_menu, draw_menu, draw_transparent_background, draw_scoreboard, load_images, SQUARE_SIZE, WIDTH, HEIGHT
 from Network import Network
 from pygame_textinput.pygame_textinput import TextInputManager, TextInputVisualizer
 import os
@@ -68,24 +68,6 @@ def is_valid_import(import_string):
         delimiter = ' '
 
     moves = re.split(r'[,\s]+', import_string)  # Update this line to split using both comma and space
-
-    # Check if each move in the import_string is valid
-    for move in moves:
-        if not move_pattern_old.match(move) and not move_pattern_new.match(move):
-            if import_string != "Empty!":
-                print("DEBUG: String not empty, but malformed! (" + str(import_string) + ")")
-            return False
-
-    return True
-
-    # Check if each move in the import_string is valid
-    for move in moves:
-        if not move_pattern_old.match(move) and not move_pattern_new.match(move):
-            if import_string != "Empty!":
-                print("DEBUG: String not empty, but malformed! (" + str(import_string) + ")")
-            return False
-
-    return True
 
     # Check if each move in the import_string is valid
     for move in moves:
@@ -177,29 +159,34 @@ def main():
     text_input_visualizer_import = TextInputVisualizer(manager=text_input_manager_import)
 
     def handle_menu_click(pos, game_state, menu_buttons, textbox_rect=None):
-        if (WIDTH // 2 - 300) // 2 <= pos[0] <= (WIDTH * 3 // 2 + 300) // 2 and (HEIGHT // 2 - 200) // 2 <= pos[1] <= (HEIGHT * 3 // 2 + 200) // 2:
-            for button in menu_buttons:
-                if button["rect"].collidepoint(pos):
-                    if button["function"] == "resume":
-                        game_state = "play"
-                    elif button["function"] == "scoreboard":
-                        game_state = "scoreboard"
-                    elif button["function"] == "help":
-                        game_state = "help"
-                    elif button["function"] == "import_export":
-                        game_state = "import"
-                    elif button["function"] == "back":
-                        game_state = "menu"
-                    elif button["function"] == "quit_game":  # Add this condition
-                        pygame.quit()
-                        sys.exit()
-                    elif button["function"] == "export":  # Add this condition
-                        formatted_moves = export_move_history(chess_board.move_history)
-                        save_moves_to_file(formatted_moves)
-            return game_state
+        nonlocal chess_board, selected_piece
+        for button in menu_buttons:
+            if "rect" not in button:
+                continue
+            if button["rect"].collidepoint(pos):
+                if button["function"] == "resume":
+                    game_state = "play"
+                elif button["function"] == "new_game":
+                    chess_board = ChessBoard()
+                    selected_piece = None
+                    game_state = "play"
+                elif button["function"] == "scoreboard":
+                    game_state = "scoreboard"
+                elif button["function"] == "help":
+                    game_state = "help"
+                elif button["function"] == "import_export":
+                    game_state = "import"
+                elif button["function"] == "back":
+                    game_state = "menu"
+                elif button["function"] == "quit_game":
+                    pygame.quit()
+                    sys.exit()
+                elif button["function"] == "export":
+                    formatted_moves = export_move_history(chess_board.move_history)
+                    save_moves_to_file(formatted_moves)
+        return game_state
 
     def draw_scoreboard_background(screen, BACKGROUND_WIDTH, BACKGROUND_HEIGHT):
-        BACKGROUND_WIDTH, BACKGROUND_HEIGHT = BACKGROUND_WIDTH, BACKGROUND_HEIGHT
         BACKGROUND_COLOR = (153, 102, 51)
         BACKGROUND_BORDER_COLOR = (0, 0, 0)
         background_rect = pygame.Rect((WIDTH - BACKGROUND_WIDTH) // 2, (HEIGHT - BACKGROUND_HEIGHT) // 2, BACKGROUND_WIDTH, BACKGROUND_HEIGHT)
@@ -237,9 +224,9 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.KEYDOWN:  # Fix the indentation here
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_u and game_state == "play":
-                    chess_board.undo_move(False)
+                    chess_board.undo_move()
                 elif event.key == pygame.K_ESCAPE and game_state == "play":
                     game_state = "menu"
                 elif event.key == pygame.K_ESCAPE and game_state == "scoreboard":
@@ -260,13 +247,9 @@ def main():
                         if contents != "":
                             with open(file_path, "w") as f:
                                 f.write("")
-                                undo_valid = chess_board.undo_move(False)
+                                undo_valid = chess_board.undo_move()
                                 while chess_board is not None and undo_valid:
-                                    undo_valid = chess_board.undo_move(False)
-            if event.type == pygame.QUIT:
-                running = False
-
-            # Add a condition to check if game_state is "play"
+                                    undo_valid = chess_board.undo_move()
             if game_state == "play":
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button != 2\
                    and event.button != 3 and event.button != 4 and event.button != 5:
@@ -283,7 +266,7 @@ def main():
                             move_successful = chess_board.move_piece(selected_piece[0], selected_piece[1], row, col)
                             if move_successful:
                                 updated_board = network.send((selected_piece[0], selected_piece[1], row, col))
-                                if updated_board is not None:  # Add this check
+                                if updated_board is not None:
                                     chess_board = updated_board
                                 selected_piece = None
                             elif piece != ' ':
@@ -291,10 +274,10 @@ def main():
         draw_board(screen, chess_board, selected_piece)
 
         if game_state == "play":
-            draw_board(screen, chess_board, selected_piece)
+            draw_game_status(screen, chess_board)
         elif game_state == "scoreboard":
             draw_transparent_background(screen)
-            draw_scoreboard_background(screen, 400, 200)  # Add this line
+            draw_scoreboard_background(screen, 400, 200)
             draw_scoreboard(screen, chess_board)
         elif game_state == "menu":
             draw_transparent_background(screen)
@@ -318,23 +301,20 @@ def main():
                 elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_CTRL:
                     text_input_manager_help.set_text(paste_from_clipboard())
                 elif event.key == pygame.K_RETURN:
-                    input_text_help = text_input_manager_help.value  # Get the input from the text_input_manager
+                    input_text_help = text_input_manager_help.value
                     file_path_one = "server.txt"
 
                     if not os.path.exists(file_path_one):
-                        print("server.txt does exist! Do you want to play online?")
                         with open(file_path_one, "w") as f:
                             f.write("")
-                            pass  # You can write some initial content here if you want, or just leave it empty
                     with open("server.txt", "r") as f:
                         if not is_valid_ip(f.read()) or is_valid_ip(input_text_help):
                             print("Updating empty IP file with " + input_text_help)
                             with open("server.txt", "w") as f:
                                 if (is_valid_ip(input_text_help)):
                                     f.write(input_text_help)  # Update the server.txt file with the input
-                    # Update the server_data variable in Network.py
-                    Network.server_data = input_text_help # Change this line
-                    text_input_manager_help.clear_text()  # Clear the file
+                    Network.server_data = input_text_help
+                    text_input_manager_help.clear_text()
         elif game_state == "import":
             draw_transparent_background(screen)
             draw_scoreboard_background(screen, 700, 450)
@@ -346,22 +326,19 @@ def main():
                 elif event.key == pygame.K_v and pygame.key.get_mods() & pygame.KMOD_CTRL:
                     text_input_manager_import.set_text(paste_from_clipboard())
                 elif event.key == pygame.K_RETURN:
-                    input_text_import = text_input_manager_import.value  # Get the input from the text_input_manager
+                    input_text_import = text_input_manager_import.value
 
                     with open(file_path_two, "r") as f:
                         if f.read() == "" or input_text_import != "":
                             with open("import.txt", "w") as f:
-                                f.write(input_text_import)  # Update the server.txt file with the input
+                                f.write(input_text_import)
                         if input_text_import != "" and is_valid_import(input_text_import):
                                 print("Import is valid. Attempting to setup board.")
                                 decoded_moves = decode_import(input_text_import)
                                 for move in decoded_moves:
                                     chess_board.move_piece(*move)
 
-                    # Update the server_data variable in Network.py
-                    Network.server_data = input_text_import
-                    #print(input_text)
-                    text_input_manager_import.clear_text() # Clear the input after updating the file
+                    text_input_manager_import.clear_text()
 
             elif event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
                 game_state = "menu"

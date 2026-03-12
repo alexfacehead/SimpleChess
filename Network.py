@@ -1,34 +1,36 @@
 import socket
 import pickle
 import os
-import time
 
 networking_enabled = False
 server_data = ""
 file_path = "server.txt"
-neworking_enabled = False
 networking_file_path = "networking.txt"
+
 if os.path.exists(networking_file_path):
     with open(networking_file_path, "r") as f:
-        networking_enabled = f.read()
+        content = f.read().strip().lower()
+        networking_enabled = content == "true"
         if networking_enabled:
-            print("Networking DISABLED (change in HELP menu)")
+            print("Networking ENABLED (change in HELP menu)")
         else:
-            print("netowrking ENABLED (change in HELP menu)")
+            print("Networking DISABLED (change in HELP menu)")
 
-
-# Check if the file exists, and create it if it doesn't
 if not os.path.exists(file_path):
     with open(file_path, "w") as f:
-        with open(file_path, "r") as f:
-            if networking_enabled:
-                print("Networking enabled! But server.txt is blank! Please update it in the help menu, or alter it manually.")
+        f.write("")
+    if networking_enabled:
+        print("Networking enabled! But server.txt is blank! Please update it in the help menu, or alter it manually.")
 else:
-    with open(file_path, "r") as g:
-        network_file_contents = g.read()
-        if network_file_contents == "":
-            network_file_contents = "Empty!"
-        print("Network file detected! IP: " + network_file_contents)
+    with open(file_path, "r") as f:
+        network_file_contents = f.read().strip()
+        if network_file_contents:
+            server_data = network_file_contents
+            print("Network file detected! IP: " + network_file_contents)
+        else:
+            print("Network file detected but empty.")
+
+
 class Network:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -1,52 +1,65 @@
 # Simple Python Chess by alexfacehead
 
-This is a simple chess game implemented in Python that is actively maintained as of April 6 2023. It supports networked local or online multiplayer, although it currently does not support en passant or pawn promotion. These features are planned for future implementation. The main menu, however, features an import/export feature, a place to enter your network address (IP), and a scoreboard.
-
-Enjoy this minimalistic chess game!
+A chess game implemented in Python with Pygame. Supports local and networked multiplayer with full chess rule enforcement including en passant, castling, pawn promotion, and check/checkmate/stalemate detection.
 
 ![SimpleChess](./images/SimpleChessNew.png)
 ![MainMenu](./images/mainmenu3.png)
 ![ScoreBoard](./images/scoreboard.png)
 
 ## How to Play
-- Utilize the help menu if you do not know the rules of chess (TBA)
-- Press `RESUME` to begin the game or to return from the pause screen
-- Press the `ESC` key to open the menu
+- Press `ESC` to open the main menu
+- Press `RESUME` to begin or return to the game
+- Click a piece to select it (green highlight), then click a destination to move
+- Press `U` to undo the last move
 
 ## Features
-- Pull up the main menu with `ESC`
-     - Main menu that has `RESUME`, `SCOREBOARD`, `HELP`, and `IMPORT/EXPORT` buttons
-        - Help menu - TBA
-        - Import/Export functionality - TBA
-- Scoreboard displayed in dark text for both sides, just pull up the menu and press `SCOREBOARD`
-- Blue highlighting for selected pieces
-- Undo *any* move using the `u` key
-- Piece logic for all moves except en passant
-- Turn-based gameplay with no easy cheatings
-- Implements castling perfectly!
-- Pawn promotion DISABLED for now
-- Very visually familiar board
-- A variation on chess pieces contained in /images_copy/
+- Full piece movement logic for all standard chess rules
+- En passant captures
+- Kingside and queenside castling (with full validation: path clear, no moving through check)
+- Pawn promotion (auto-promotes to queen)
+- Check, checkmate, and stalemate detection with on-screen display
+- Turn indicator and check warnings displayed during play
+- Scoreboard tracking captured piece values
+- Move import/export in algebraic notation
+- Undo any move with `U`
+- Networked multiplayer via TCP (configure IP in the Network menu)
+- Main menu with `RESUME`, `NEW GAME`, `SCOREBOARD`, `NETWORK`, `IMPORT/EXPORT`, and `QUIT GAME`
+- Green highlighting for selected pieces
+- Light/dark piece sprites matched to board square color
 
-## Installation Instructions
+## Installation
 
-### For Windows:
-1. Ensure you have Python installed on your system.
-2. Install `pip` for Windows by following the instructions at https://pip.pypa.io/en/stable/installation/.
-3. Run `game.exe` in the `/python_chess/dist/` folder.
+### Requirements
+- Python 3.8+
+- `pip install pygame pyperclip`
 
-### For Linux:
-1. Ensure you have Python installed on your system.
-2. Install `pip` for Linux by running `sudo apt install python3-pip` (for Debian/Ubuntu-based systems) or `sudo yum install python3-pip` (for RHEL/Fedora-based systems).
-3. Install the `pygame` library using `pip install pygame`.
-4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
-5. Execute the script using `./run_game.sh` and enjoy the game!
+### Running
+```bash
+chmod +x run_game.sh
+./run_game.sh
+```
+Or directly:
+```bash
+python game.py
+```
 
-### For Mac:
-1. Ensure you have Python installed on your system.
-2. Install `pip` for macOS by following the instructions at https://pip.pypa.io/en/stable/installation/.
-3. Install the `pygame` library using `pip install pygame`.
-4. Make the `run_game.sh` script executable by running `chmod +x run_game.sh`.
-5. Execute the script using `./run_game.sh` and enjoy the game!
+### Networked Play
+1. Open the `NETWORK` menu from the main menu
+2. Enter the host's IP address and press `ENTER`
+3. The host should run `python server.py` and ensure port 5555 is accessible
+4. For LAN play, use internal IP addresses; for internet play, the host needs port forwarding on port 5555
 
-This README was optimized by GPT-4.
+## Testing
+```bash
+pip install pytest
+python -m pytest test_chess.py -v
+```
+
+## Project Structure
+- `game.py` - Main entry point and game loop
+- `ChessBoard.py` - Board state, move validation, and game logic
+- `GUI.py` - Pygame rendering and UI components
+- `Network.py` - Network client for multiplayer
+- `server.py` - Network server for multiplayer
+- `test_chess.py` - Comprehensive test suite
+- `images/` - Chess piece sprites (light and dark variants)

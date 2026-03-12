@@ -38,27 +38,7 @@ def load_images():
         "p": (load_image("images/black_pawn.png"), load_image("images/black_pawn_dark.png")),
     }
 
-# Call the load_images function here
-load_images()
-
-pieces = {
-    "R": load_image("images/white_rook.png"),
-    "N": load_image("images/white_knight.png"),
-    "B": load_image("images/white_bishop.png"),
-    "Q": load_image("images/white_queen.png"),
-    "K": load_image("images/white_king.png"),
-    "P": load_image("images/white_pawn.png"),
-    "r": load_image("images/black_rook.png"),
-    "n": load_image("images/black_knight.png"),
-    "b": load_image("images/black_bishop.png"),
-    "q": load_image("images/black_queen.png"),
-    "k": load_image("images/black_king.png"),
-    "p": load_image("images/black_pawn.png")
-}
-
-def import_export_function():
-    # Add import/export functionality here
-    pass
+pieces = {}
 
 
 def draw_transparent_background(screen, color=(0, 0, 0, 128)):  # Add color argument with default value
@@ -67,7 +47,6 @@ def draw_transparent_background(screen, color=(0, 0, 0, 128)):  # Add color argu
     screen.blit(surf, (0, 0))
 
 def draw_menu(screen, menu_state):
-    #sprint("draw_menu function used")
     MENU_WIDTH, MENU_HEIGHT = 450, 450
     MENU_COLOR = (153, 102, 51)
     MENU_BORDER_COLOR = (0, 0, 0)
@@ -82,14 +61,15 @@ def draw_menu(screen, menu_state):
 def draw_main_menu(screen):
     menu_buttons = [
         {"text": "RESUME", "function": "resume"},
+        {"text": "NEW GAME", "function": "new_game"},
         {"text": "SCOREBOARD", "function": "scoreboard"},
-        {"text": "HELP", "function": "help"},
+        {"text": "NETWORK", "function": "help"},
         {"text": "IMPORT/EXPORT", "function": "import_export"},
-        {"text": "QUIT GAME", "function": "quit_game"}  # Add this line
+        {"text": "QUIT GAME", "function": "quit_game"},
     ]
 
-    button_width, button_height = 300, 55
-    button_margin = 20
+    button_width, button_height = 300, 50
+    button_margin = 15
     button_start_y = ((HEIGHT - sum([button_height + button_margin for _ in menu_buttons]) - button_margin) // 2) + 20
 
     for i, button in enumerate(menu_buttons):
@@ -139,12 +119,54 @@ def draw_board(screen, chess_board, selected_piece=None):
             if selected_piece and (row, col) == selected_piece:
                 pygame.draw.rect(screen, BORDER_COLOR, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), BORDER_WIDTH)
 
-def draw_help_menu(screen, text_input_manager, events):
+def draw_game_status(screen, chess_board):
+    """Draw game status (check, checkmate, stalemate) and turn indicator."""
+    status = chess_board.game_status
+    turn = chess_board.turn
+
+    if status in ('checkmate', 'stalemate'):
+        # Full-screen overlay for game-ending states
+        surf = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        surf.fill((0, 0, 0, 160))
+        screen.blit(surf, (0, 0))
+
+        font = pygame.font.Font(None, 72)
+        if status == 'checkmate':
+            winner = 'Black' if turn == 'white' else 'White'
+            text = f"CHECKMATE - {winner} wins!"
+        else:
+            text = "STALEMATE - Draw!"
+        text_surf = font.render(text, True, (255, 255, 255))
+        text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 20))
+        screen.blit(text_surf, text_rect)
+
+        sub_font = pygame.font.Font(None, 36)
+        sub_text = sub_font.render("Press ESC for menu", True, (200, 200, 200))
+        sub_rect = sub_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 30))
+        screen.blit(sub_text, sub_rect)
+
+    elif status == 'check':
+        font = pygame.font.Font(None, 42)
+        text = font.render(f"CHECK - {turn.capitalize()}'s turn", True, (255, 50, 50))
+        bg = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
+        bg.fill((0, 0, 0, 180))
+        screen.blit(bg, (WIDTH // 2 - bg.get_width() // 2, 5))
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
+
+    else:
+        font = pygame.font.Font(None, 32)
+        text = font.render(f"{turn.capitalize()}'s turn", True, (255, 255, 255))
+        bg = pygame.Surface((text.get_width() + 20, text.get_height() + 10), pygame.SRCALPHA)
+        bg.fill((0, 0, 0, 140))
+        screen.blit(bg, (WIDTH // 2 - bg.get_width() // 2, 5))
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
+
+
+def draw_help_menu(screen, text_input_visualizer, events):
     menu_buttons = [
         {"text": "BACK", "function": "back"}
     ]
 
-    # Draw help text
     help_text = """To host an online game, enter the host's IP
 address in the text box. If you're the host,
 enable port forwarding on port 5555 and
@@ -163,29 +185,23 @@ To find your IP address:
 
     help_lines = help_text.split("\n")
     font = pygame.font.Font(None, 28)
-    bold_font = pygame.font.Font(None, 28)  # Create a new font object for the bold text
-    bold_font.set_bold(True)  # Set the bold attribute for the bold_font object
-    line_spacing = 5
+    bold_font = pygame.font.Font(None, 28)
+    bold_font.set_bold(True)
     line_spacing = 5
     total_height = sum([font.size(line)[1] + line_spacing for line in help_lines]) - line_spacing
-    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50  # Keep 110
+    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50
 
     for i, line in enumerate(help_lines):
         if line.startswith("To find your IP address:"):
-            current_font = bold_font  # Use the bold font for the specific line
+            current_font = bold_font
         else:
             current_font = font
-        text_surf = current_font.render(line, True, (0, 0, 0))  # Use 'current_font' instead of 'font'
+        text_surf = current_font.render(line, True, (0, 0, 0))
         text_rect = text_surf.get_rect()
         text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * i)
         screen.blit(text_surf, text_rect)
 
-
-    # Create a TextInputVisualizer instance using the text_input_manager
-    text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
-
-    # Update the text_input_visualizer with the latest events
-    text_input_manager.update(events)
+    text_input_visualizer.update(events)
 
     # Adjust the position of the textbox
     textbox_width, textbox_height = 400, 50
@@ -214,45 +230,33 @@ To find your IP address:
     return menu_buttons, textbox_rect
 
 
-def draw_textbox(screen):
-    textbox_width, textbox_height = 400, 50
-    textbox_x = (WIDTH - textbox_width) // 2
-    textbox_y = HEIGHT // 2
-    textbox_rect = pygame.Rect(textbox_x, textbox_y, textbox_width, textbox_height)
-    pygame.draw.rect(screen, (255, 255, 255), textbox_rect)
-    pygame.draw.rect(screen, (0, 0, 0), textbox_rect, 2)
-    return textbox_rect
-
-
-def draw_import_export_menu(screen, text_input_manager, events):
+def draw_import_export_menu(screen, text_input_visualizer, events):
     menu_buttons = [
         {"text": "EXPORT", "function": "export"},
         {"text": "BACK", "function": "back"}
     ]
 
-    # Draw import text specifications
-    import_text = """Import your properly formatted game import here, 
-    then press enter. Your moves should be comma 
-    separated, standard chess formatted moves. 
-    (example: 
+    import_text = """Import your properly formatted game import here,
+    then press enter. Your moves should be comma
+    separated, standard chess formatted moves.
+    (example:
 a7, a6, a2, a3, c7, c6, c2, c3, d7,
-d6, d2, d3, c6, d7, c1, d2, c3, c4, c8, 
-d7, a6, c4, a1, c3, d6, d7, d1, d2, e7, 
+d6, d2, d3, c6, d7, c1, d2, c3, c4, c8,
+d7, a6, c4, a1, c3, d6, d7, d1, d2, e7,
 a7, e7, a7, e1, a1, e1, a1"""
 
     import_lines = import_text.split("\n")
     font = pygame.font.Font(None, 36)
     line_spacing = 5
     total_height = sum([font.size(line)[1] + line_spacing for line in import_lines]) - line_spacing
-    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50  # Keep 110
+    start_y = HEIGHT // 2 - 110 - total_height // 2 + 50
 
     for i, line in enumerate(import_lines):
-        text_surf = font.render(line, True, (0, 0, 0))  # Use 'line' instead of 'help_text'
+        text_surf = font.render(line, True, (0, 0, 0))
         text_rect = text_surf.get_rect()
         text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * i)
         screen.blit(text_surf, text_rect)
 
-    # Draw the bold bottom-most text
     bold_text = "PRESS DEL KEY TO CLEAR IMPORT FILE CONTENTS"
     bold_font = pygame.font.Font(None, 36)
     bold_font.set_bold(True)
@@ -261,11 +265,7 @@ a7, e7, a7, e1, a1, e1, a1"""
     bold_text_rect.center = (WIDTH // 2, start_y + (font.size(line)[1] + line_spacing) * len(import_lines))
     screen.blit(bold_text_surf, bold_text_rect)
 
-    # Create a TextInputVisualizer instance using the text_input_manager
-    text_input_visualizer = TextInputVisualizer(manager=text_input_manager)
-
-    # Update the text_input_visualizer with the latest events
-    text_input_manager.update(events)
+    text_input_visualizer.update(events)
 
     # Adjust the position of the textbox
     textbox_width, textbox_height = 400, 50
